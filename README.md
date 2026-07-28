@@ -27,7 +27,7 @@ Via Package Manager
 # on Windows
 winget install AwesomeDog.soma
 # on macOS
-brew tap AwesomeDog/tap && brew trust AwesomeDog/tap && brew install --cask AwesomeDog/tap/soma
+brew tap AwesomeDog/tap && brew trust AwesomeDog/tap && brew install AwesomeDog/tap/soma
 # on Linux
 curl -fsSL https://github.com/AwesomeDog/soma/releases/latest/download/soma-linux-x64 -o soma
 chmod +x soma && sudo mv soma /usr/local/bin/

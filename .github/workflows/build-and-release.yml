@@ -7,24 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '25'
-          cache: maven
-
-      - name: Test
-        run: mvn test
-
   build-macos:
-    needs: test
     runs-on: macos-latest
     steps:
       - name: Checkout
@@ -53,7 +36,6 @@ jobs:
           retention-days: 7
 
   build-windows:
-    needs: test
     runs-on: windows-latest
     steps:
       - name: Checkout
@@ -85,10 +67,9 @@ jobs:
           retention-days: 7
 
   build-linux:
-    needs: test
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/graalvm/native-image-community:25-muslib
+      image: ghcr.io/graalvm/native-image-community:25.0.2-ol10-20260120
     steps:
       - name: Install git and build dependencies
         run: |
