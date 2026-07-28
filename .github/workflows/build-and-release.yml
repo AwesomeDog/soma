@@ -18,7 +18,6 @@ jobs:
         with:
           distribution: graalvm
           java-version: '25'
-          components: native-image
           cache: maven
 
       - name: Build macOS native executable
@@ -28,7 +27,7 @@ jobs:
           ./target/soma-mac-arm64 --help
 
       - name: Upload macOS artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: macos-builds
           path: target/soma-mac-arm64
@@ -46,7 +45,6 @@ jobs:
         with:
           distribution: graalvm
           java-version: '25'
-          components: native-image
           cache: maven
 
       - name: Setup MSVC Developer Command Prompt
@@ -59,7 +57,7 @@ jobs:
           .\target\soma-windows-x64.exe --help
 
       - name: Upload Windows artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: windows-builds
           path: target/soma-windows-x64.exe
@@ -88,7 +86,7 @@ jobs:
           ./target/soma-linux-x64 --help
 
       - name: Upload Linux artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: linux-builds
           path: target/soma-linux-x64
@@ -103,7 +101,7 @@ jobs:
       contents: write
     steps:
       - name: Download all artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: artifacts
 
@@ -111,7 +109,7 @@ jobs:
         run: ls -R artifacts
 
       - name: Create Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: |
             artifacts/macos-builds/soma-mac-arm64
