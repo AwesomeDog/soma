@@ -1,0 +1,148 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+
+      - name: Test
+        run: mvn test
+
+  build-macos:
+    needs: test
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-tags: true
+
+      - name: Setup GraalVM
+        uses: graalvm/setup-graalvm@v1
+        with:
+          distribution: graalvm
+          java-version: '25'
+          components: native-image
+          cache: maven
+
+      - name: Build macOS native executable
+        run: |
+          mvn -Pnative-mac-arm64 -DskipTests clean package
+          ./target/soma-mac-arm64 --version
+          ./target/soma-mac-arm64 --help
+
+      - name: Upload macOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-builds
+          path: target/soma-mac-arm64
+          if-no-files-found: error
+          retention-days: 7
+
+  build-windows:
+    needs: test
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-tags: true
+
+      - name: Setup GraalVM
+        uses: graalvm/setup-graalvm@v1
+        with:
+          distribution: graalvm
+          java-version: '25'
+          components: native-image
+          cache: maven
+
+      - name: Setup MSVC Developer Command Prompt
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Build Windows native executable
+        run: |
+          mvn -Pnative-windows-x64 -DskipTests clean package
+          .\target\soma-windows-x64.exe --version
+          .\target\soma-windows-x64.exe --help
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-builds
+          path: target/soma-windows-x64.exe
+          if-no-files-found: error
+          retention-days: 7
+
+  build-linux:
+    needs: test
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/graalvm/native-image-community:25-muslib
+    steps:
+      - name: Install git and build dependencies
+        run: |
+          microdnf install -y git tar gzip maven zlib-devel
+          mvn -version
+          gcc --version
+          native-image --version
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-tags: true
+
+      - name: Build Linux native executable
+        run: |
+          mvn -Pnative-linux-x64 -DskipTests clean package
+          ./target/soma-linux-x64 --version
+          ./target/soma-linux-x64 --help
+
+      - name: Upload Linux artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-builds
+          path: target/soma-linux-x64
+          if-no-files-found: error
+          retention-days: 7
+
+  release:
+    needs: [build-macos, build-windows, build-linux]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Display structure of downloaded files
+        run: ls -R artifacts
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            artifacts/macos-builds/soma-mac-arm64
+            artifacts/windows-builds/soma-windows-x64.exe
+            artifacts/linux-builds/soma-linux-x64
+          draft: true
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

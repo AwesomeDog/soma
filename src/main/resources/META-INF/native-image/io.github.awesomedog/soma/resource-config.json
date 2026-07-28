@@ -1,0 +1,13 @@
+{
+  "resources": {
+    "includes": [
+      { "pattern": "\\Qartifacts/artifacts.json\\E" },
+      { "pattern": "\\Qdb/schema.sql\\E" },
+      { "pattern": "\\Qdb/cache-schema.sql\\E" },
+      { "pattern": "\\QMETA-INF/soma-build.properties\\E" },
+      { "pattern": "\\Qweb/index.html\\E" },
+      { "pattern": "\\Qweb/icon.svg\\E" },
+      { "pattern": "sqlite-vec/.+" }
+    ]
+  }
+}

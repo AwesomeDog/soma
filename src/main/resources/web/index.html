@@ -1,0 +1,625 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Soma</title>
+  <link rel="icon" href="/icon.svg" type="image/svg+xml" sizes="any">
+  <script>document.documentElement.style.colorScheme = localStorage.theme || "light dark"</script>
+  <style>
+    /* light-dark() pairs + native state selectors */
+    :root {
+      color-scheme: light dark;
+      --bg: light-dark(#f5f5f7, #000);
+      --surface: light-dark(#fff, #1d1d1f);
+      --border: light-dark(#d2d2d7, #424245);
+      --text: light-dark(#1d1d1f, #f5f5f7);
+      --muted: light-dark(#6e6e73, #a1a1a6);
+      --link: light-dark(#0066cc, #2997ff); --link-text: #fff;
+      --err: light-dark(#d70015, #ff6961);
+      --radius: 4px; --s1: 8px; --s2: 16px; --fs-s: 12px; --fs-l: 18px;
+      --sans: system-ui, sans-serif;
+      --mono: ui-monospace, "Monaco", Menlo, Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    body { min-width: 320px; margin: 0; background: var(--bg); color: var(--text); font: 14px/1.6 var(--sans); overflow-wrap: anywhere; }
+    h1 { margin: 0; font-size: var(--fs-l); }
+    pre { margin: 0; font: var(--fs-s)/1.6 var(--mono); white-space: pre-wrap; }
+    output { display: block; }  /* live region */
+    a { color: var(--link); text-decoration: none; &:hover { text-decoration: underline; } }
+
+    /* --- controls --- */
+    button, .btn, input, select {
+      min-height: 36px; padding: 4px 12px;
+      border: 1px solid var(--border); border-radius: var(--radius);
+      background: var(--surface); color: var(--text); font: inherit;
+    }
+    button, .btn { cursor: pointer; &:hover { background: var(--bg); text-decoration: none; } }
+    :where(a, label).btn { position: relative; display: inline-flex; align-items: center; }  /* :where() = low specificity */
+    .btn > input { position: absolute; opacity: 0; }  /* real radios, visually hidden */
+    .btn:has(:checked), .btn[aria-current] { border-color: var(--link); background: var(--link); color: var(--link-text); }
+    .btn:has(:focus-visible) { outline: 2px solid var(--link); outline-offset: 2px; }
+    select { max-width: min(300px, 60vw); }
+    input[type="number"] { width: 80px; }
+
+    /* --- utilities --- */
+    .row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s1); }
+    .center { justify-content: center; text-align: center; }
+    .push { margin-left: auto; }
+    .grow { flex: 1; min-width: 0; }
+    .flow > * + * { margin-top: var(--s2); }
+    .flow > :empty { display: none; }
+    .dim { color: var(--muted); font-size: var(--fs-s); }
+    .big { font-size: var(--fs-l); font-weight: 600; }
+    .mono { font-family: var(--mono); }
+    .num { text-align: end; font-variant-numeric: tabular-nums; }
+    .error { color: var(--err); }
+    .pad { padding: var(--s2); }
+    .card { border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); overflow: hidden; }
+    .divided > * + * { border-top: 1px solid var(--border); }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--s2); }
+
+    /* --- layout --- */
+    .skip { position: fixed; top: var(--s1); left: var(--s1); z-index: 20; translate: 0 -200%; &:focus-visible { translate: none; } }
+    .header { position: sticky; top: 0; z-index: 10; border-bottom: 1px solid var(--border); background: var(--surface); padding: var(--s1) var(--s2); view-transition-name: header; }
+    .header-inner, .container { width: min(100%, 1040px); margin: 0 auto; }
+    .header-inner { display: grid; grid-template-columns: auto minmax(220px, 1fr) auto; gap: var(--s2); align-items: center; }
+    .container { padding: var(--s2); }
+    .logo { display: inline-flex; align-items: center; gap: var(--s1); color: var(--text); white-space: nowrap; }
+    .logo img { width: 28px; height: 28px; border-radius: var(--radius); }
+    .nav a { color: var(--muted); &[aria-current] { color: var(--text); font-weight: 600; } }
+    .hero { max-width: 720px; margin: 0 auto; padding: 12svh var(--s2) var(--s2); }
+    .hero-logo { font-size: 32px; }
+
+    /* --- components --- */
+    .result-item { padding: var(--s2) 0; }
+    .preview-media {
+      display: grid; place-items: center; aspect-ratio: 1; overflow: hidden; background: var(--bg);
+      & a { display: block; width: 100%; height: 100%; }
+      & img { display: block; width: 100%; height: 100%; object-fit: scale-down; }
+    }
+    .preview-text { width: 100%; height: 100%; overflow: auto; padding: var(--s1); }
+
+    /* subgrid: header & rows share column tracks; expanding <details> only adds rows */
+    .table { display: grid; grid-template-columns: minmax(120px, 1fr) minmax(200px, 2fr) auto auto auto; column-gap: var(--s2); }
+    .table :is(.tbody, details) { display: grid; grid-template-columns: subgrid; }
+    .table :is(.tbody, details), .table :is(.tbody, details) > * { grid-column: 1 / -1; min-width: 0; }
+    .table details::details-content { grid-column: 1 / -1; }
+    .tr { display: grid; grid-template-columns: subgrid; grid-column: 1 / -1; row-gap: var(--s1); align-items: center; padding: var(--s1) var(--s2); }
+    .thead { border-bottom: 1px solid var(--border); color: var(--muted); font-size: var(--fs-s); }
+    summary.tr { cursor: pointer; }
+    summary.tr > :first-child::before { content: "▸ "; color: var(--muted); }
+    [open] > summary.tr > :first-child::before { content: "▾ "; }
+    .files { display: grid; gap: var(--s1); border-top: 1px solid var(--border); padding: var(--s1) var(--s2); font-size: var(--fs-s); }
+    .files > * { content-visibility: auto; contain-intrinsic-block-size: auto 1lh; }  /* O(viewport) rendering */
+
+    /* motion is opt-in (reduced-motion needs no undo); [open] = :open with wider support */
+    .drawer {
+      position: fixed; inset: 0 0 0 auto; margin: 0; max-width: none; max-height: none;
+      width: min(100%, 640px); height: 100dvh; border: 0; border-left: 1px solid var(--border); border-radius: 0;
+      background: var(--surface); color: var(--text);
+      box-shadow: -12px 0 24px -8px rgb(0 0 0 / .25);
+      opacity: 0; translate: 100% 0;
+
+      &::backdrop { opacity: 0; background: rgb(0 0 0 / .35); }
+      & {
+        @media (prefers-reduced-motion: no-preference) {
+          transition: opacity .18s ease, translate .24s cubic-bezier(.22, 1, .36, 1),
+          display .24s allow-discrete, overlay .24s allow-discrete;
+        }
+      }
+      &[open], &[open]::backdrop { opacity: 1; @starting-style { opacity: 0; translate: 100% 0; } }
+      &[open] { display: flex; flex-direction: column; translate: 0; }
+      & > pre { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; scrollbar-gutter: stable; }
+    }
+    body:has(.drawer[open]) { overflow: hidden; }
+
+    @media (width <= 720px) {
+      .header-inner, .table { grid-template-columns: 1fr; }
+      .thead { display: none; }
+      .num { text-align: start; }
+      .drawer { width: 100%; border-left: 0; }
+    }
+    @media (forced-colors: active) { .btn > input { position: static; opacity: 1; } }
+    @media (prefers-reduced-motion: reduce) {
+      ::view-transition-old(*), ::view-transition-new(*) { animation: none; }
+    }
+  </style>
+</head>
+<body>
+<a class="skip btn" href="#main">Skip to content</a>
+<noscript><div class="container">Soma requires JavaScript to run.</div></noscript>
+
+<header class="header">
+  <div class="header-inner">
+    <a class="logo big" href="/"><img src="/icon.svg" alt="" width="28" height="28">Soma</a>
+    <search aria-label="Site">
+      <form id="bar" class="row" action="/">
+        <input class="grow" name="q" type="search" autocomplete="off" placeholder="Search..." aria-label="Search">
+        <input type="hidden" name="mode"><input type="hidden" name="project">
+        <input type="hidden" name="limit"><input type="hidden" name="display">
+        <button>Search</button>
+      </form>
+    </search>
+    <nav class="nav row" aria-label="Primary">
+      <a href="/" data-nav="search">Search</a>
+      <a href="/?view=projects" data-nav="projects">Projects</a>
+      <a href="/?view=status" data-nav="status">Status</a>
+      <a href="/?view=help" data-nav="help">Help</a>
+      <button id="theme" type="button" aria-label="Theme">🌗</button>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <section id="home" class="hero flow">
+    <h1 class="hero-logo center">Soma</h1>
+    <search aria-label="Main">
+      <form id="hero" class="flow" action="/">
+        <div class="row">
+          <input class="grow" name="q" type="search" required autofocus autocomplete="off"
+               placeholder="Search your knowledge base..." aria-label="Search">
+          <button>Search</button>
+        </div>
+        <input type="hidden" name="display">
+        <div class="row center" role="radiogroup" aria-label="Search mode">
+          <label class="btn"><input type="radio" name="mode" value="hybrid" checked>Hybrid</label>
+          <label class="btn"><input type="radio" name="mode" value="lexical">Lexical</label>
+          <label class="btn"><input type="radio" name="mode" value="vector">Vector</label>
+        </div>
+        <div class="row center">
+          <label class="row dim">Project <select name="project"><option value="">Default search scope</option></select></label>
+          <label class="row dim">Limit <input name="limit" type="number" min="1" max="500" value="20"></label>
+        </div>
+      </form>
+    </search>
+  </section>
+
+  <section id="results" class="container flow" hidden>
+    <form id="res" class="row" action="/">
+      <input type="hidden" name="q"><input type="hidden" name="display">
+      <label class="row dim">Mode
+        <select name="mode">
+          <option value="hybrid">Hybrid search</option>
+          <option value="lexical">Lexical search</option>
+          <option value="vector">Vector search</option>
+        </select>
+      </label>
+      <label class="row dim">Project <select name="project"><option value="">Default search scope</option></select></label>
+      <label class="row dim">Limit <input name="limit" type="number" min="1" max="500" value="20"></label>
+      <nav class="row push" aria-label="Result view">
+        <a class="btn" href="/" data-display="list">List</a>
+        <a class="btn" href="/" data-display="preview">Preview</a>
+      </nav>
+    </form>
+    <div id="resNote" role="status"></div>
+    <output id="resMeta" class="dim"></output>
+    <div id="resList"></div>
+  </section>
+
+  <section id="projects" class="container flow" hidden>
+    <form class="row" action="/">
+      <h1 class="grow">Projects</h1>
+      <input type="hidden" name="view" value="projects"><button>Refresh</button>
+    </form>
+    <div id="projNote" role="status"></div>
+    <div class="card table">
+      <div class="tr thead"><span>Project</span><span>Root</span><span class="num">Docs</span><span>Default</span><span></span></div>
+      <div id="projList" class="tbody divided"></div>
+    </div>
+  </section>
+
+  <section id="status" class="container flow" hidden>
+    <form class="row" action="/">
+      <h1 class="grow">Status</h1>
+      <input type="hidden" name="view" value="status"><button>Refresh</button>
+    </form>
+    <div id="statNote" role="status"></div>
+    <div id="statCards" class="grid"></div>
+    <div id="statWarns" class="card divided" hidden></div>
+  </section>
+
+  <section id="help" class="container help" hidden>
+    <!-- generated-help-content -->
+  </section>
+</main>
+
+<!-- Drawer opened by the `doc` URL param; showModal() = top layer + focus trap + native Esc -->
+<dialog id="doc" class="drawer pad flow" closedby="any" aria-labelledby="docTitle">
+  <div class="row">
+    <h1 id="docTitle" class="grow">Document</h1>
+    <a id="docClose" class="btn" href="/" aria-label="Close">✕</a>
+  </div>
+  <div id="docMeta" class="dim mono"></div>
+  <pre id="docBody"></pre>
+</dialog>
+
+<script type="module">
+  // SSOT: the URL is the only state — links/forms write it, the Navigation API renders it.
+  // Views share one render loop, one cache and one fail() path; loads are keyed, not
+  // signal-bound, so cached data survives back/forward. `doc` is an overlay param.
+
+  // ── Vocabulary ────────────────────────────────────────────────────
+  const oneOf = (...opts) => v => opts.includes(v) ? v : opts[0];
+  const PARAM = {   // sanitizer = schema = default
+    q: v => v?.trim() ?? "",
+    mode: oneOf("hybrid", "lexical", "vector"),
+    project: v => v ?? "",
+    limit: v => Math.min(Math.max(parseInt(v, 10) || 20, 1), 500),
+    display: oneOf("list", "preview"),
+  };
+  const ROUTE = { ...PARAM, view: oneOf("", "projects", "status", "help") };
+  const DEF = Object.fromEntries(Object.entries(ROUTE).map(([k, f]) => [k, f()]));
+  const page = r => r.view || (r.q ? "results" : "home");
+  const THEMES = { "light dark": "🌗", light: "☀️", dark: "🌙" }, CYCLE = Object.keys(THEMES);
+  const NEW_TAB = { target: "_blank", rel: "noreferrer" };
+  const IMG = new Set(["avif", "gif", "jpeg", "jpg", "png", "svg", "webp"]);
+  const TXT = new Set(("c cc conf cpp css csv go h hpp html ini java js json log md mjs " +
+    "properties py sh sql text toml ts tsx txt xml yaml yml").split(" "));
+
+  // ── State ─────────────────────────────────────────────────────────
+  let route = null;          // mirror of the current URL
+  let bust = false;          // form submitted → fetch fresh data
+  let docAbort;              // drawer cancels independently
+  const boot = new AbortController();  // retired by the first real navigation
+  const mem = new Map();         // cache: key → { job?, v? }
+  const memo = (k, fn) => {      // job dedupes in-flight work; failures retry
+    const e = mem.get(k) ?? mem.set(k, {}).get(k);
+    return e.job ??= fn().then(v => e.v = v, err => { e.job = null; throw err; });
+  };
+  const val = (k, d) => mem.get(k)?.v ?? d;
+  const stale = k => { const e = mem.get(k); if (e) e.job = null; };
+  const $ = new Proxy({}, { get: (c, id) => c[id] ??= document.getElementById(id) });
+
+  // ── Router: /?q=… results · /?view=projects|status|help · &doc=… drawer ──
+  function parse({ searchParams: sp }) {
+    const r = { doc: sp.get("doc") ?? "" };
+    for (const k in ROUTE) r[k] = ROUTE[k](sp.get(k));
+    return r;
+  }
+
+  // inverse of parse(): re-sanitized, defaults pruned
+  const urlFor = (o = {}, base = route) => {
+    const p = new URLSearchParams();
+    for (const k in ROUTE) { const v = String(ROUTE[k](o[k] ?? base[k])); if (v !== String(DEF[k])) p.set(k, v); }
+    if (o.doc) p.set("doc", o.doc);
+    return p.size ? `/?${p}` : "/";
+  };
+
+  // page identity ignoring `doc`
+  const pageOf = r => urlFor({}, r);
+
+  // one navigate listener; reloads, downloads, POSTs, hash jumps stay native
+  window.navigation?.addEventListener("navigate", e => {
+    const url = new URL(e.destination.url);
+    if (!e.canIntercept || e.hashChange || e.downloadRequest !== null || e.formData ||
+      e.navigationType === "reload" || url.pathname !== "/") return;
+    boot.abort();
+    e.intercept({ focusReset: "manual", scroll: "manual",
+      handler: () => render(parse(url), e.signal, e) });
+  });
+
+  addEventListener("submit", () => bust = true);
+  addEventListener("formdata", e => {  // canonical URLs: drop default fields
+    for (const [k, v] of [...e.formData]) if (!v || v === String(DEF[k] ?? "")) e.formData.delete(k);
+  });
+
+  async function render(r, sig, nav) {
+    const prev = route;
+    route = r;
+    const v = views[page(r)], key = v.key?.(r);
+    const reload = !prev || pageOf(prev) !== pageOf(r) || bust;
+    const docMoved = prev?.doc !== r.doc;
+    if (docMoved) docAbort?.abort();
+    if (bust) { bust = false; [key, ...v.deps ?? []].forEach(stale); }
+    const hit = !!mem.get(key)?.job;   // fresh or in flight → prep skips placeholder
+    const job = reload && key ? memo(key, () => v.load(r)) : null;
+
+    if (!r.doc) setTitle(v.title(r));
+    if (reload) {
+      const paint = () => { sync(r); if (v.note) note($[v.note]); v.prep?.(r, hit); nav?.scroll(); };
+      if (!prev || !document.startViewTransition) paint();
+      else await document.startViewTransition(paint).updateCallbackDone
+        .catch(err => { if (!sig.aborted) throw err; });
+    }
+
+    await Promise.all([   // aborted ⇒ a newer render owns the screen
+      job?.then(data => sig.aborted || v.draw(data, r), err => sig.aborted || fail(v, err)),
+      docMoved && renderDoc(r),
+    ]);
+  }
+
+  // shared failure path
+  const fail = (v, err) => { v.zones?.forEach(z => $[z].replaceChildren()); note($[v.note], err.message, true); };
+
+  // ── Shared chrome ─────────────────────────────────────────────────
+  const setTitle = t => document.title = t ? `${t} - Soma` : "Soma";
+
+  function sync(r) {  // URL → chrome: sections, nav, controls, view links
+    const cur = page(r);
+    for (const s of document.querySelectorAll("main > section")) s.hidden = s.id !== cur;
+    for (const a of document.querySelectorAll("[data-nav]"))
+      a.ariaCurrent = a.dataset.nav === (r.view || "search") ? "page" : null;
+    fillSelects(r);  // options before values
+    for (const f of document.forms) for (const k in PARAM) { const c = f.elements[k]; if (c) c.value = r[k]; }
+    for (const a of document.querySelectorAll("[data-display]")) {
+      a.href = urlFor({ display: a.dataset.display });
+      a.ariaCurrent = r.display === a.dataset.display ? "true" : null;
+    }
+  }
+
+  function fillSelects(r) {
+    const names = val("projects", []).map(p => p.name);
+    if (r.project && !names.includes(r.project)) names.push(r.project);  // keep unknown filters visible
+    for (const s of document.querySelectorAll("select[name=project]")) {
+      s.replaceChildren(new Option("Default search scope", ""), ...names.map(n => new Option(n, n)));
+      s.value = r.project;
+    }
+  }
+
+  // ── Views ─────────────────────────────────────────────────────────
+  const skey = r => urlFor({ display: DEF.display }, r);   // search identity, display-agnostic
+  const loadProjects = async () => arr((await rpc("project.list")).data?.projects);
+  const loadStatus = async () => (await rpc("status")).data ?? null;
+  const docHead = (title, path) => {
+    $.docTitle.textContent = title;
+    $.docMeta.replaceChildren(RawLink(assetUrl(path), path));
+  };
+
+  const views = {
+    home: {
+      title: () => "",
+      prep: r => { if (!r.doc) $.hero.elements.q.focus(); },  // don't steal focus from the drawer
+    },
+
+    help: {
+      title: () => "Help",
+      prep: () => import("https://cdn.jsdelivr.net/npm/mermaid@11.16.0/dist/mermaid.esm.min.mjs")
+        .then(({ default: mermaid }) => mermaid.run({ nodes: $.help.querySelectorAll(".mermaid") }))
+        .catch(() => {}),
+    },
+
+    results: {
+      title: r => r.q,
+      key: skey, note: "resNote", zones: ["resMeta", "resList"],
+      async load(r) {
+        const env = await rpc(`search.${r.mode}`, [r.q],
+          { format: "json", limit: r.limit, ...r.project && { project: [r.project] } });
+        return { hits: arr(env.data?.results), ms: env.durationMs };
+      },
+      prep(r, hit) {
+        if (hit && $.resList.dataset.key === skey(r)) return;  // same data: keep DOM & scroll
+        $.resMeta.textContent = hit ? "" : "Searching...";
+        $.resList.replaceChildren();
+      },
+      draw({ hits, ms }, r) {
+        $.resMeta.textContent = `${hits.length} ${hits.length === 1 ? "result" : "results"} (${secs(ms)})`;
+        $.resList.className = r.display === "preview" ? "grid" : "divided";
+        $.resList.dataset.key = skey(r);
+        $.resList.replaceChildren(...hits.length
+          ? hits.map(r.display === "preview" ? Preview : Result) : [hint("No results.")]);
+      },
+    },
+
+    projects: {
+      title: () => "Projects",
+      key: () => "projects", deps: ["status"], note: "projNote", zones: ["projList"],
+      load: () =>  // stats are optional: never fail the table
+        Promise.all([loadProjects(), memo("status", loadStatus).catch(() => {})]).then(([ps]) => ps),
+      prep: (r, hit) => hit || $.projList.replaceChildren(hint("Loading...")),
+      draw(ps, r) {
+        fillSelects(r);
+        const stats = new Map(arr(val("status")?.projects).map(x => [x.name, x.stats]));
+        $.projList.replaceChildren(...ps.length
+          ? ps.map(p => Project(p, stats.get(p.name))) : [hint("No projects.")]);
+      },
+    },
+
+    status: {
+      title: () => "Status",
+      key: () => "status", note: "statNote", zones: ["statCards"],
+      load: loadStatus,
+      prep: (r, hit) => hit || ($.statCards.replaceChildren(hint("Loading...")), $.statWarns.hidden = true),
+      draw(s) {
+        s ??= {};
+        const sum = k => arr(s.projects).reduce((n, p) => n + (+p.stats?.[k] || 0), 0);
+        $.statCards.replaceChildren(...[
+          ["Workspace", s.workspace || "main"],
+          ["Index", s.indexStatus || (s.databaseExists ? "ready" : "missing")],
+          ["Documents", num(sum("documents"))],
+          ["Vectors", num(sum("vectors"))],
+        ].map(([k, v]) => div("card pad", div("dim", k), div("big", v))));
+        const warns = arr(s.warnings);
+        $.statWarns.hidden = false;
+        $.statWarns.replaceChildren(...(warns.length ? warns : ["No warnings."]).map(w => div("pad", w)));
+      },
+    },
+  };
+
+  // Drawer follows route.doc; content never cached, owns its AbortController.
+  async function renderDoc(r) {
+    if (!r.doc) { docAbort = null; $.doc.ariaBusy = "false"; return $.doc.close(); }
+
+    const ctl = docAbort = new AbortController();
+    $.docClose.href = urlFor({ doc: "" });
+    $.doc.ariaBusy = "true";
+    docHead("Loading...", r.doc);
+    $.docBody.className = $.docBody.textContent = "";
+    if (!$.doc.open) $.doc.showModal();
+
+    try {
+      const { data, stderr } = await rpc("get", [r.doc], { format: "json", "max-size": "1MB" }, ctl.signal);
+      if (ctl.signal.aborted) return;
+      const item = arr(data?.items)[0];
+      if (!item) throw Error((stderr ?? "").trim() || "Document not found.");
+      const path = item.virtualPath || r.doc, name = vpath(path).title || path || "Document";
+      setTitle(name);
+      docHead(name, path);
+      $.docBody.textContent = item.body || "";
+    } catch (e) {
+      if (ctl.signal.aborted) return;
+      setTitle("Document");
+      $.docTitle.textContent = "Document";
+      $.docBody.className = "error";
+      $.docBody.textContent = e.message;
+    } finally {
+      if (docAbort === ctl) { docAbort = null; $.doc.ariaBusy = "false"; }
+    }
+  }
+
+  // ── Components (Capitalised helpers return DOM nodes) ─────────────
+  const hitInfo = r => {
+    const path = r.virtualPath || "", target = path || r.docId || "";
+    return { path, target, name: r.title || target || "Document", src: assetUrl(path) };
+  };
+  const RawLink = (src, text) => src ? h("a", { href: src, ...NEW_TAB }, text) : text;
+  const PathRow = (src, path) => div("dim mono", RawLink(src, path));
+
+  function Result(r) {
+    const { path, target, name, src } = hitInfo(r);
+    return el("article", "result-item",
+      PathRow(src, path),
+      target ? h("a", { class: "big", href: urlFor({ doc: target }) }, name) : el("span", "big", name),
+      Number.isFinite(r.score) ? el("span", "dim", ` score: ${r.score.toFixed(3)}`) : null,
+      r.line ? el("span", "dim", ` line ${r.line}`) : null,
+      div("", r.snippet || r.body || ""));
+  }
+
+  function Preview(r) {
+    const { path, target, name, src } = hitInfo(r), kind = ext(path), media = div("preview-media");
+
+    if (!src) media.append(hint("Preview unavailable"));
+    else if (IMG.has(kind)) media.append(h("a", { href: src, ...NEW_TAB },
+      h("img", { src, alt: name, loading: "lazy",
+        onerror: () => media.replaceChildren(hint("Preview unavailable")) })));
+    else if (TXT.has(kind)) { media.append(hint("Loading preview...")); fillPreview(src, media); }
+    else media.append(hint(kind.toUpperCase() || "File"));
+
+    const strong = el("strong", "", name);
+    return el("article", "card divided", media,
+      div("pad", target ? h("a", { href: urlFor({ doc: target }) }, strong) : strong,
+        PathRow(src, path)));
+  }
+
+  async function fillPreview(src, box) {
+    try {
+      const res = await fetch(src);
+      if (!res.ok) throw 0;
+      box.replaceChildren(el("pre", "preview-text", clip(await res.text())));
+    } catch { box.replaceChildren(hint("Preview unavailable")); }
+  }
+
+  // Native <details> row; files lazy-loaded once on first open.
+  function Project(p, stats) {
+    const files = div("files");
+    let job;
+    return h("details", {
+        ontoggle(e) {
+          if (!e.target.open || job) return;
+          files.replaceChildren(div("dim", "Loading..."));
+          job = rpc("project.files", [p.name]).then(({ data }) => {
+            const fs = arr(data?.files);
+            files.replaceChildren(...fs.length ? fs.map(f => FileLink(f, p.name)) : [div("dim", "No files.")]);
+          }).catch(err => { job = null; files.replaceChildren(div("dim", err.message)); });
+        } },
+      el("summary", "tr",
+        el("strong", "", p.name),
+        div("dim mono", p.root || ""),
+        div("dim num", stats ? num(stats.documents || 0) : "—"),
+        div("dim", p.defaultSearch ? "yes" : "—"),
+        h("a", { href: urlFor({ view: "", project: p.name }) }, "Search")),
+      files);
+  }
+
+  function FileLink(f, proj) {
+    const path = f.path || "", vp = `soma://${f.project || proj}/${path}`, href = assetUrl(vp);
+    return href ? h("a", { class: "mono", href, ...NEW_TAB }, path || vp) : div("dim mono", path || vp);
+  }
+
+  // ── Server API ────────────────────────────────────────────────────
+  async function rpc(command, args = [], options = {}, signal) {
+    const res = await fetch("/api/run", {
+      method: "POST", signal,
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ command, args, options, global: { "no-color": true } }),
+    }).catch(e => { throw signal?.aborted ? e : Error("Cannot reach the Soma server."); });
+    const env = await res.json().catch(() => null);
+    if (env?.success) return env;
+    if (env?.error)  // prefer the server's structured error
+      throw Error([env.error.message || "Command failed.", env.error.remediation].filter(Boolean).join(" "));
+    throw Error(!res.ok ? `Server error (HTTP ${res.status}).` : env ? "Command failed." : "Invalid server response.");
+  }
+
+  // ── DOM helpers: minimal hyperscript ──────────────────────────────
+  function h(tag, props = {}, ...kids) {
+    const n = document.createElement(tag);
+    for (const [k, v] of Object.entries(props)) {
+      if (v == null) continue;
+      if (k === "class") n.className = v;
+      else if (k.includes("-")) n.setAttribute(k, v);
+      else n[k] = v;
+    }
+    n.append(...kids.flat().filter(x => x != null));
+    return n;
+  }
+  const el = (tag, cls, ...kids) => h(tag, { class: cls }, ...kids);
+  const div = (cls, ...kids) => el("div", cls, ...kids);
+  const hint = text => div("pad dim center", text);
+  const note = (box, msg, isErr) => box.replaceChildren(...msg ? [div(`card pad${isErr ? " error" : ""}`, msg)] : []);
+
+  // ── Parsing / formatting ──────────────────────────────────────────
+  const arr = v => Array.isArray(v) ? v : [];
+  const num = v => (+v || 0).toLocaleString();
+  const secs = ms => `${((+ms || 0) / 1000).toFixed(2)} seconds`;
+  const clip = s => (s = String(s ?? "")).length > 1800 ? `${s.slice(0, 1800)}\n...` : s;
+  const filename = v => String(v ?? "").replace(/\/+$/, "").split("/").pop();
+  const ext = v => { const n = filename(v).toLowerCase(), i = n.lastIndexOf("."); return i > 0 ? n.slice(i + 1) : ""; };
+  const vpath = v => {  // regex, not URL.parse: project names may contain spaces
+    const m = String(v ?? "").match(/^soma:\/\/([^/]+)\/?(.*)$/);
+    return m ? { project: m[1], path: m[2], title: filename(m[2]) || m[2] }
+      : { project: "", path: String(v ?? ""), title: filename(v) };
+  };
+  const assetUrl = v => {
+    const { project, path } = vpath(v);
+    return project && path
+      ? `/assets/${encodeURIComponent(project)}/${path.split("/").map(encodeURIComponent).join("/")}`
+      : "";
+  };
+
+  // ── Boot ──────────────────────────────────────────────────────────
+  // Theme value = CSS value; localStorage persists.
+  const root = document.documentElement;
+  const setTheme = t => {
+    root.style.colorScheme = t = THEMES[t] ? t : CYCLE[0];
+    $.theme.textContent = THEMES[t];
+    $.theme.title = $.theme.ariaLabel = `Theme: ${t === CYCLE[0] ? "auto" : t}`;
+    return t;
+  };
+  $.theme.onclick = () =>
+    localStorage.theme = setTheme(CYCLE[(CYCLE.indexOf(root.style.colorScheme) + 1) % CYCLE.length]);
+  setTheme(localStorage.theme);
+
+  $.res.onchange = () => $.res.requestSubmit();  // filter changes = submissions
+
+  addEventListener("keydown", e => {  // "/" focuses the relevant search box
+    if (e.key !== "/" || e.ctrlKey || e.metaKey || e.altKey || $.doc.open) return;
+    const t = e.target;
+    if (t.matches?.("input, textarea, select") || t.isContentEditable) return;
+    e.preventDefault();
+    const q = ($.home.hidden ? $.bar : $.hero).elements.q;
+    q.focus(); q.select();
+  });
+
+  // Esc / light-dismiss go through the ✕ link; onclose reconciles the URL.
+  $.doc.oncancel = e => { e.preventDefault(); $.docClose.click(); };
+  $.doc.onclose = () => route.doc && $.docClose.click();
+
+  render(parse(new URL(location)), boot.signal);
+  memo("projects", loadProjects).then(() => fillSelects(route)).catch(() => {});
+  memo("status", loadStatus).catch(() => {});  // warm caches without blocking paint
+</script>
+</body>
+</html>

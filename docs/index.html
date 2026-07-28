@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Soma — Local Search Engine</title>
+    <link rel="icon" href="./specs/icon.svg" type="image/svg+xml" sizes="any">
+    <style>
+        *{margin:0;box-sizing:border-box}
+        body{font:17px/1.65 -apple-system,"Helvetica Neue",Arial,sans-serif;color:#1d1d1f;background:#fff;-webkit-font-smoothing:antialiased}
+        .wrap{max-width:880px;margin:0 auto;padding:0 24px}
+        header{padding:16px 0;position:sticky;top:0;background:rgba(255,255,255,.85);backdrop-filter:blur(14px);border-bottom:1px solid #eee;z-index:9}
+        header .wrap{display:flex;justify-content:space-between;align-items:center}
+        .brand{display:flex;align-items:center;gap:9px;color:#1d1d1f;text-decoration:none;font-weight:600}
+        .brand img{display:block;width:34px;height:34px;border-radius:7px}
+        header nav a{color:#555;text-decoration:none;font-size:14px;margin-left:22px}
+        .hero{text-align:center;padding:130px 0 90px}
+        h1{font-size:64px;font-weight:700;letter-spacing:-.035em;line-height:1.05}
+        .hero p{font-size:24px;color:#6e6e73;margin:24px auto 40px;max-width:600px;font-weight:400}
+        .cta{display:inline-block;background:#0071e3;color:#fff;text-decoration:none;padding:14px 30px;border-radius:99px;font-size:17px}
+        .cta:hover{background:#0077ed}
+        .ghost{display:inline-block;color:#0071e3;text-decoration:none;padding:14px 20px;font-size:17px}
+        .kicker{text-transform:uppercase;letter-spacing:.14em;font-size:12px;color:#86868b;text-align:center;margin-bottom:14px}
+        h2{font-size:40px;font-weight:700;letter-spacing:-.025em;text-align:center;margin-bottom:56px}
+        section{padding:90px 0;border-top:1px solid #f0f0f0}
+        .flow{display:flex;justify-content:center;gap:14px;flex-wrap:wrap}
+        .flow div:not(.arrow){padding:26px 30px;background:#f5f5f7;border-radius:18px;min-width:170px;text-align:center}
+        .flow b{display:block;font-size:22px;letter-spacing:-.02em}
+        .flow span{color:#86868b;font-size:14px}
+        .arrow{align-self:center;color:#c7c7cc;font-size:22px}
+        .feat{display:grid;grid-template-columns:1fr 1fr;gap:56px 64px}
+        .feat h3{font-size:21px;letter-spacing:-.02em;margin-bottom:8px}
+        .feat p{color:#6e6e73;font-size:16px}
+        pre{background:#f5f5f7;border-radius:18px;padding:28px;font:14px/1.9 ui-monospace,"SF Mono",Menlo,monospace;color:#1d1d1f;white-space:pre-wrap;overflow-wrap:break-word;max-width:500px;margin:0 auto}
+        pre .c{color:#86868b}
+        pre a{color:inherit;text-decoration:underline}
+        pre a:hover{color:#0071e3}
+        .fine{text-align:center;color:#86868b;font-size:13px;margin-top:26px}
+        footer{padding:44px 0;color:#86868b;font-size:13px;text-align:center;border-top:1px solid #f0f0f0}
+        @media(max-width:720px){h1{font-size:42px}.feat{grid-template-columns:1fr}.arrow{display:none}}
+    </style>
+</head>
+<body>
+<header><div class="wrap"><a class="brand" href="#" aria-label="Soma home"><img src="./specs/icon.svg" alt="" width="34" height="34">Soma</a>
+    <nav><a href="#how">How it works</a><a href="#features">Features</a><a href="#get">Download</a><a href="https://github.com/AwesomeDog/soma" target="_blank">GitHub</a></nav></div></header>
+
+<section class="hero wrap">
+    <h1>All your knowledge.<br>One search away.</h1>
+    <p>A local knowledge-base search engine that understands your documents, images, audio and video. Nothing leaves your machine.</p>
+    <a class="cta" href="#get">Download for free</a>
+    <a class="ghost" href="#how">Learn more ›</a>
+</section>
+
+<section id="how"><div class="wrap">
+    <div class="kicker">The mental model</div>
+    <h2>Three steps. That's it.</h2>
+    <div class="flow">
+        <div><b>add</b><span>a project</span></div><div class="arrow">→</div>
+        <div><b>sync</b><span>make it ready</span></div><div class="arrow">→</div>
+        <div><b>search</b><span>find anything</span></div>
+    </div></div>
+</section>
+
+<section id="features"><div class="wrap">
+    <div class="kicker">Why Soma</div>
+    <h2>Quietly powerful.</h2>
+    <div class="feat">
+        <div><h3>Hybrid search that just works.</h3><p>One natural-language query expands into keywords, semantic vectors and a hypothetical document — fused and reranked by a local LLM for uncannily good results. No degraded answers.</p></div>
+        <div><h3>Private by design.</h3><p>Everything — indexing, OCR, embeddings, reranking — runs on your machine through a managed local runtime. Offline-friendly, always. Zero telemetry, by construction.</p></div>
+        <div><h3>Sees and hears your files.</h3><p>Vision extraction, OCR and transcription make screenshots, scans, audio and video recordings as searchable as plain text.</p></div>
+        <div><h3>Native on every platform.</h3><p>Native executables for Windows x64, Linux x64 and macOS ARM64. Instant startup, single binary — no installers, no dependencies.</p></div>
+        <div><h3>Speaks your language.</h3><p>Multilingual indexing that tokenizes your material, with careful CJK handling — even one- or two-character queries stay retrievable.</p></div>
+        <div><h3>CLI, server, browser.</h3><p>Use the terminal, run an HTTP service with a built-in web interface, or automate through one clean JSON endpoint that mirrors the CLI.</p></div>
+    </div></div>
+</section>
+
+<section id="get"><div class="wrap">
+    <div class="kicker">Get started</div>
+    <h2>Up and running in a minute.</h2>
+    <pre><span class="c"># Windows</span>
+winget install AwesomeDog.soma
+
+<span class="c"># macOS</span>
+brew tap AwesomeDog/tap &amp;&amp; brew trust AwesomeDog/tap &amp;&amp; brew install --cask AwesomeDog/tap/soma
+
+<span class="c"># Linux</span>
+curl -fsSL https://github.com/AwesomeDog/soma/releases/latest/download/soma-linux-x64 -o soma &amp;&amp; chmod +x soma &amp;&amp; sudo mv soma /usr/local/bin/
+
+<span class="c"># Then</span>
+soma project add ~/notes --name notes
+soma sync
+soma search "how does auth work"</pre>
+    <p class="fine">Runs on 8 GB RAM · 24 GB recommended for OCR, vision &amp; transcription · GPU optional</p>
+</div></section>
+
+<footer>Soma · A local knowledge-base search engine · Built with GraalVM.</footer>
+</body>
+</html>

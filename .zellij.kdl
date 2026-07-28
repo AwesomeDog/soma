@@ -1,0 +1,96 @@
+// Usage: zellij -s soma -n .zellij.kdl
+// Usage: zellij a soma
+// ClearAll: zellij ka; zellij delete-all-sessions
+
+layout {
+    default_tab_template {
+        pane size=1 borderless=true {
+            plugin location="zellij:tab-bar"
+        }
+        children
+        pane size=2 borderless=true {
+            plugin location="zellij:status-bar"
+        }
+    }
+
+    tab name="DEV" focus=true cwd="." {
+        pane split_direction="vertical" {
+            pane {
+                command "mvn"
+                args "-Pnative-mac-arm64" "-DskipTests" "package"
+                start_suspended true
+            }
+            pane split_direction="horizontal" {
+                pane name="htop" {
+                    command "htop"
+                }
+                pane {
+                    command "mvn"
+                    args "spotless:apply"
+                    start_suspended true
+                }
+            }
+        }
+    }
+
+    tab name="TEST" cwd="." {
+        pane split_direction="horizontal" {
+            pane {
+                command "mvn"
+                args "test"
+                start_suspended true
+            }
+            pane {
+                command "python3"
+                args "tests/e2e_tests.py"
+                start_suspended true
+            }
+        }
+    }
+
+    tab name="LOG" cwd="~/.local/state/soma/logs" {
+        pane {
+            command "tail"
+            args "-f" "main.log"
+            start_suspended true
+        }
+    }
+
+    tab name="PATHS" {
+        pane split_direction="vertical" {
+            pane split_direction="horizontal" {
+                pane name="configs" {
+                    command "sh"
+                    args "-c" "mkdir -p ~/.config/soma && cd ~/.config/soma && ls -al; exec ${SHELL:-bash}"
+                }
+                pane name="tools" {
+                    command "sh"
+                    args "-c" "mkdir -p ~/.local/share/soma && cd ~/.local/share/soma && ls -al; exec ${SHELL:-bash}"
+                }
+            }
+            pane split_direction="horizontal" {
+                pane name="dbs" {
+                    command "sh"
+                    args "-c" "mkdir -p ~/.local/state/soma && cd ~/.local/state/soma && ls -al; exec ${SHELL:-bash}"
+                }
+                pane name="logs" {
+                    command "sh"
+                    args "-c" "mkdir -p ~/.local/state/soma/logs && cd ~/.local/state/soma/logs && ls -al; exec ${SHELL:-bash}"
+                }
+            }
+        }
+    }
+
+    tab name="RUN" {
+        pane split_direction="vertical" {
+            pane split_direction="horizontal" {
+                pane {}
+                pane {}
+            }
+            pane split_direction="horizontal" {
+                pane {}
+                pane {}
+            }
+        }
+    }
+}

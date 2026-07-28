@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="sqlite-vec">
+    <target name="bundle">
+        <condition property="sqlite.vec.resource.platform" value="windows-x86_64">
+            <and>
+                <os family="windows"/>
+                <or>
+                    <os arch="x86_64"/>
+                    <os arch="amd64"/>
+                </or>
+            </and>
+        </condition>
+        <condition property="sqlite.vec.archive.file" value="sqlite-vec-${sqlite.vec.version}-loadable-windows-x86_64.tar.gz">
+            <and>
+                <os family="windows"/>
+                <or>
+                    <os arch="x86_64"/>
+                    <os arch="amd64"/>
+                </or>
+            </and>
+        </condition>
+        <condition property="sqlite.vec.binary.name" value="vec0.dll">
+            <and>
+                <os family="windows"/>
+                <or>
+                    <os arch="x86_64"/>
+                    <os arch="amd64"/>
+                </or>
+            </and>
+        </condition>
+
+        <condition property="sqlite.vec.resource.platform" value="darwin-arm64">
+            <and>
+                <os family="mac"/>
+                <or>
+                    <os arch="aarch64"/>
+                    <os arch="arm64"/>
+                </or>
+            </and>
+        </condition>
+        <condition property="sqlite.vec.archive.file" value="sqlite-vec-${sqlite.vec.version}-loadable-macos-aarch64.tar.gz">
+            <and>
+                <os family="mac"/>
+                <or>
+                    <os arch="aarch64"/>
+                    <os arch="arm64"/>
+                </or>
+            </and>
+        </condition>
+        <condition property="sqlite.vec.binary.name" value="vec0.dylib">
+            <and>
+                <os family="mac"/>
+                <or>
+                    <os arch="aarch64"/>
+                    <os arch="arm64"/>
+                </or>
+            </and>
+        </condition>
+
+        <condition property="sqlite.vec.resource.platform" value="linux-x86_64">
+            <and>
+                <os family="unix"/>
+                <not><os family="mac"/></not>
+                <or>
+                    <os arch="x86_64"/>
+                    <os arch="amd64"/>
+                </or>
+            </and>
+        </condition>
+        <condition property="sqlite.vec.archive.file" value="sqlite-vec-${sqlite.vec.version}-loadable-linux-x86_64.tar.gz">
+            <and>
+                <os family="unix"/>
+                <not><os family="mac"/></not>
+                <or>
+                    <os arch="x86_64"/>
+                    <os arch="amd64"/>
+                </or>
+            </and>
+        </condition>
+        <condition property="sqlite.vec.binary.name" value="vec0.so">
+            <and>
+                <os family="unix"/>
+                <not><os family="mac"/></not>
+                <or>
+                    <os arch="x86_64"/>
+                    <os arch="amd64"/>
+                </or>
+            </and>
+        </condition>
+
+        <fail message="sqlite-vec platform is unsupported on this host">
+            <condition>
+                <not><isset property="sqlite.vec.resource.platform"/></not>
+            </condition>
+        </fail>
+
+        <property name="sqlite.vec.download.dir" value="${project.build.directory}/sqlite-vec-downloads"/>
+        <property name="sqlite.vec.unpack.dir" value="${project.build.directory}/sqlite-vec-unpacked/${sqlite.vec.resource.platform}"/>
+        <property name="sqlite.vec.resource.dir" value="${project.build.outputDirectory}/sqlite-vec/${sqlite.vec.version}/${sqlite.vec.resource.platform}"/>
+        <property name="sqlite.vec.download.file" value="${sqlite.vec.download.dir}/${sqlite.vec.archive.file}"/>
+        <property name="sqlite.vec.download.url" value="https://github.com/asg017/sqlite-vec/releases/download/v${sqlite.vec.version}/${sqlite.vec.archive.file}"/>
+        <property name="sqlite.vec.license.file" value="${project.build.outputDirectory}/sqlite-vec/${sqlite.vec.version}/LICENSE-MIT"/>
+        <property name="sqlite.vec.license.url" value="https://raw.githubusercontent.com/asg017/sqlite-vec/v${sqlite.vec.version}/LICENSE-MIT"/>
+
+        <mkdir dir="${sqlite.vec.download.dir}"/>
+        <mkdir dir="${sqlite.vec.unpack.dir}"/>
+        <mkdir dir="${sqlite.vec.resource.dir}"/>
+
+        <get src="${sqlite.vec.download.url}" dest="${sqlite.vec.download.file}" skipexisting="true"/>
+        <get src="${sqlite.vec.license.url}" dest="${sqlite.vec.license.file}" skipexisting="true"/>
+        <untar src="${sqlite.vec.download.file}" dest="${sqlite.vec.unpack.dir}" compression="gzip"/>
+        <copy file="${sqlite.vec.unpack.dir}/${sqlite.vec.binary.name}"
+              tofile="${sqlite.vec.resource.dir}/${sqlite.vec.binary.name}"
+              overwrite="true"/>
+    </target>
+</project>

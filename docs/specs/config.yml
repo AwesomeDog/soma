@@ -1,0 +1,70 @@
+# Soma Configuration
+# Location: $XDG_CONFIG_HOME/soma/<workspace>.yml; directory-local: .soma/local.yml
+# Source of truth for projects and context
+# Changes take effect immediately; sync command aligns index with this config.
+
+version: 1
+
+# ------------------------------
+# Project definitions (SSOT: all project-level metadata)
+# ------------------------------
+projects:
+  # Names: Only Unicode letters/numbers, "_" and "-" are allowed.
+  # In $XDG_CONFIG_HOME/soma/<workspace>.yml, roots are absolute or "~"-prefixed.
+  # In .soma/local.yml, use "." or "./..." and stay inside the workspace root.
+
+  # Meeting notes
+  - name: Meetings
+    root: ~/Documents/Meetings
+    include:
+      - "**/*.md"
+    exclude:                   # Exclude notes containing sensitive information
+      - "**/secret.md"
+    default-search: false      # Whether this project is in the default search scope
+    ignore-files: true
+
+  # Daily journal entries
+  - name: journals
+    root: ~/Documents/Notes
+    include:
+      - "**/*.md"
+    exclude: [ ]
+    default-search: true
+    ignore-files: false
+
+  - name: codex
+    root: ~/Documents/Codex
+    include:
+      - "**/*.md"
+    default-search: true
+    ignore-files: true
+
+# ------------------------------
+# Context entries
+# ------------------------------
+# Context provides search hints for specific paths
+# Global context: omit project or set it to null, apply to all projects
+# Project context: project must reference an existing projects[].name
+# `soma project rename` updates matching references; `soma project remove` deletes matching entries.
+context:
+  # Context identity is ('project', 'path'); duplicate identities use the last entry.
+
+  - project: null
+    path: /
+    text: "If you see a relevant [[WikiWord]], search that WikiWord for more context."
+
+  - project: Meetings
+    path: /
+    text: "Meeting notes and summaries."
+
+  - project: journals
+    path: /
+    text: "Notes vault."
+
+  - project: journals
+    path: /journal/2025
+    text: "Daily notes from 2025."
+
+  - project: codex
+    path: /
+    text: "Thematic collections of important concepts and discussions."

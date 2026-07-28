@@ -1,0 +1,67 @@
+{
+  "project": "test-eval-docs",
+  "root": "fixtures/eval-docs",
+  "include": ["**/*.md"],
+  "queries": [
+    {
+      "mode": "hybrid",
+      "query": "API versioning",
+      "expected_paths": ["api-design-principles.md"],
+      "top_k": 1
+    },
+    {
+      "mode": "hybrid",
+      "query": "Series A fundraising",
+      "expected_paths": ["startup-fundraising-memo.md"],
+      "top_k": 1
+    },
+    {
+      "mode": "hybrid",
+      "query": "CAP theorem",
+      "expected_paths": ["distributed-systems-overview.md"],
+      "top_k": 1
+    },
+    {
+      "mode": "hybrid",
+      "query": "how to structure REST endpoints",
+      "expected_paths": ["api-design-principles.md"],
+      "top_k": 3
+    },
+    {
+      "mode": "hybrid",
+      "query": "raising money for startup",
+      "expected_paths": ["startup-fundraising-memo.md"],
+      "top_k": 3
+    },
+    {
+      "mode": "hybrid",
+      "query": "how to prevent models from memorizing data",
+      "expected_paths": ["machine-learning-primer.md"],
+      "top_k": 3
+    },
+    {
+      "mode": "hybrid",
+      "query": "what went wrong with the product launch",
+      "expected_paths": ["product-launch-retrospective.md"],
+      "top_k": 3
+    },
+    {
+      "mode": "hybrid",
+      "query": "consistency vs availability tradeoffs",
+      "expected_paths": ["distributed-systems-overview.md"],
+      "top_k": 3
+    },
+    {
+      "mode": "hybrid",
+      "query": "working from home guidelines",
+      "expected_paths": ["remote-work-policy.md"],
+      "top_k": 3
+    },
+    {
+      "mode": "hybrid",
+      "query": "nouns not verbs",
+      "expected_paths": ["api-design-principles.md"],
+      "top_k": 5
+    }
+  ]
+}
