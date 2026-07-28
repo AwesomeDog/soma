@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -28,9 +28,7 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-tags: true
+        uses: actions/checkout@v6
 
       - name: Setup GraalVM
         uses: graalvm/setup-graalvm@v1
@@ -59,9 +57,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-tags: true
+        uses: actions/checkout@v6
 
       - name: Setup GraalVM
         uses: graalvm/setup-graalvm@v1
@@ -96,15 +92,13 @@ jobs:
     steps:
       - name: Install git and build dependencies
         run: |
-          microdnf install -y git tar gzip maven zlib-devel
+          microdnf install -y git tar gzip maven
           mvn -version
           gcc --version
           native-image --version
 
       - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-tags: true
+        uses: actions/checkout@v6
 
       - name: Build Linux native executable
         run: |

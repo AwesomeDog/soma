@@ -37,7 +37,7 @@ Or
 
 Download the single-file executable from [Releases](https://github.com/AwesomeDog/soma/releases).
 
-## Quick start
+## Quick Start
 
 ```bash
 # 1. Add a project — point soma at a folder you want to search
@@ -75,39 +75,27 @@ You need the following installed locally:
 - **Internet access on first build** to download Maven dependencies and the platform-specific `sqlite-vec` binary
   bundled during the build
 
-### Build
+### Dev Commands
 
 ```bash
-# Build a Windows x64 native executable:
-mvn -Pnative-windows-x64 -DskipTests clean package
-
-# Build a macOS ARM64 native executable:
-mvn -Pnative-mac-arm64 -DskipTests clean package
-
-# Build a Linux x64 native executable:
-mvn -Pnative-linux-x64 -DskipTests clean package
-```
-
-Expected outputs:
-
-- `target/soma-mac-arm64`
-- `target/soma-linux-x64`
-- `target/soma-windows-x64.exe`
-
-Run the generated native executable, for example:
-
-```bash
-./target/soma-mac-arm64 --help
-
-# Run on some older Linux environments (because of sqlite-vec):
-LD_PRELOAD=/usr/lib64/libm.so.6 soma sync
-```
-
-### Test
-
-```bash
+# Test
 mvn test
 python3 tests/e2e_tests.py
+
+# Build Windows x64 native executable to `target/soma-windows-x64.exe`
+mvn -Pnative-windows-x64 -DskipTests clean package
+# Build macOS ARM64 native executable to `target/soma-mac-arm64`
+mvn -Pnative-mac-arm64 -DskipTests clean package
+# Build Linux x64 native executable to `target/soma-linux-x64`
+mvn -Pnative-linux-x64 -DskipTests clean package
+
+# Run
+./target/soma-mac-arm64 --help
+# Run on some older Linux environments (because of sqlite-vec):
+LD_PRELOAD=/usr/lib64/libm.so.6 soma sync
+
+# Release
+v=v0.9.1 && git tag -a "$v" -m "Release $v" && git push origin "$v" # Bump version & trigger CI
 ```
 
 ## Credits
