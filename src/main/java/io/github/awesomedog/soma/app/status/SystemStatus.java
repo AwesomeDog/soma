@@ -144,7 +144,7 @@ public final class SystemStatus {
           prefix
               + "has "
               + stats.failed()
-              + " failed extraction document(s). Inspect the log, fix the source file, then run "
+              + " failed extraction document(s). Inspect the log, resolve the issue, then run "
               + "`soma sync`.");
     }
     if (stats.ready() > stats.lexical()) {
