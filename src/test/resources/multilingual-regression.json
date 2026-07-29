@@ -1,0 +1,31 @@
+{
+  "project": "test-multilingual",
+  "root": "fixtures/multilingual",
+  "include": ["**/*.txt"],
+  "queries": [
+    {
+      "mode": "vector",
+      "query": "apple",
+      "expected_paths": ["chinese.txt"],
+      "top_k": 1
+    },
+    {
+      "mode": "vector",
+      "query": "冬季",
+      "expected_paths": ["english.txt"],
+      "top_k": 1
+    },
+    {
+      "mode": "vector",
+      "query": "faro durante una tormenta invernal",
+      "expected_paths": ["english.txt"],
+      "top_k": 1
+    },
+    {
+      "mode": "vector",
+      "query": "hydroponic greenhouse in a space station",
+      "expected_paths": ["spanish.txt"],
+      "top_k": 1
+    }
+  ]
+}

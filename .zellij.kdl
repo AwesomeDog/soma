@@ -1,6 +1,7 @@
 // Usage: zellij -s soma -n .zellij.kdl
 // Usage: zellij a soma
 // ClearAll: zellij ka; zellij delete-all-sessions
+// OpenDirs: open ~/.config/soma; open ~/.local/state/soma; open ~/.local/share/soma
 
 layout {
     default_tab_template {

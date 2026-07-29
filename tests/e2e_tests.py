@@ -783,14 +783,8 @@ class Test11Server(E2E):
         return reply["data"]
 
 
-class Test12SearchQualityRegression(E2E):
-    """Search quality regression"""
-
-    cases = (
-        Case("12.1", "Search fixture regression", "soma-cli system embed -p eval-docs\nsoma-cli search <mode> \"<fixture query>\" -p test-eval-docs --limit <top-k> --format paths", "Every expected file appears within the query's configured top K results."),
-    )
-
-    SPEC: ClassVar[Path] = ROOT / "src/test/resources/search-regression.json"
+class SearchRegression(E2E):
+    SPEC: ClassVar[Path]
 
     def setUp(self) -> None:
         super().setUp()
@@ -799,7 +793,7 @@ class Test12SearchQualityRegression(E2E):
         self.cli("project", "add", str(self.SPEC.parent / self.spec["root"]), "--name", self.proj,
                  *chain.from_iterable(("--include", inc) for inc in self.spec["include"]))
 
-    def test_12_1_fixture_queries_find_expected_files(self) -> None:
+    def assert_fixture_queries_find_expected_files(self) -> None:
         self.cli("system", "embed", "-p", self.proj)
         for q in self.spec["queries"]:
             with self.subTest(mode=q["mode"], query=q["query"]):
@@ -807,6 +801,19 @@ class Test12SearchQualityRegression(E2E):
                                "--limit", str(q["top_k"]), "-f", "paths")
                 want = {f"soma://{self.proj}/{p}" for p in q["expected_paths"]}
                 self.assertLessEqual(want, set(res.out.splitlines()), res.out)
+
+
+class Test12SearchQualityRegression(SearchRegression):
+    """Search quality regression"""
+
+    cases = (
+        Case("12.1", "Search fixture regression", "soma-cli system embed -p eval-docs\nsoma-cli search <mode> \"<fixture query>\" -p test-eval-docs --limit <top-k> --format paths", "Every expected file appears within the query's configured top K results."),
+    )
+
+    SPEC = ROOT / "src/test/resources/search-regression.json"
+
+    def test_12_1_fixture_queries_find_expected_files(self) -> None:
+        self.assert_fixture_queries_find_expected_files()
 
 
 class Test13EdgeCases(E2E):
@@ -975,6 +982,19 @@ class Test16MultimodalIndexing(DocsE2E):
         self.cli("project", "remove", MEDIA.name)
         self.cli("project", "list", has=(DOCS.name,), lacks=(MEDIA.name,))
         self.assertTrue(all((MEDIA.dir / name).exists() for name in MEDIA.files))
+
+
+class Test17MultilingualRegression(SearchRegression):
+    """Multilingual vector search regression"""
+
+    cases = (
+        Case("17.1", "Cross-language vector search", "soma-cli system embed -p test-multilingual\nsoma-cli search vector \"<fixture query>\" -p test-multilingual --limit <top-k> --format paths", "Each query returns the semantically matching document in a different language within its configured top K results.\nOnly vector search is used."),
+    )
+
+    SPEC = ROOT / "src/test/resources/multilingual-regression.json"
+
+    def test_17_1_cross_language_vector_search(self) -> None:
+        self.assert_fixture_queries_find_expected_files()
 
 
 def verify_cases() -> None:
