@@ -58,9 +58,7 @@ public final class ManagedProcesses {
     Objects.requireNonNull(launchFactory, "launchFactory");
     try {
       var currentProcess = runningProcesses.get(kind);
-      if (currentProcess != null
-          && currentProcess.process().isAlive()
-          && isEndpointReady(currentProcess.endpoint(), kind == ProcessKind.LLAMA)) {
+      if (currentProcess != null && currentProcess.process().isAlive()) {
         return currentProcess.endpoint();
       }
       logUnexpectedExit(kind, currentProcess);
@@ -164,7 +162,7 @@ public final class ManagedProcesses {
         throw startupFailure(
             "Managed runtime exited during startup: " + kind.id(), output.snapshot());
       }
-      if (isEndpointReady(endpoint, false)) {
+      if (isEndpointReady(endpoint)) {
         return;
       }
       try {
@@ -179,7 +177,7 @@ public final class ManagedProcesses {
         "Managed runtime readiness check timed out: " + kind.id(), output.snapshot());
   }
 
-  private boolean isEndpointReady(URI endpoint, boolean acceptLoading) {
+  private boolean isEndpointReady(URI endpoint) {
     try {
       var healthRequest =
           HttpRequest.newBuilder(endpoint.resolve("/health"))
@@ -188,7 +186,7 @@ public final class ManagedProcesses {
               .build();
       var status =
           httpClient.send(healthRequest, HttpResponse.BodyHandlers.discarding()).statusCode();
-      return status == 200 || (acceptLoading && status == 503);
+      return status == 200;
     } catch (IOException e) {
       return false;
     } catch (InterruptedException e) {

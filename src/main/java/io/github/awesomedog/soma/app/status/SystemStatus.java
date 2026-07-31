@@ -47,7 +47,6 @@ public final class SystemStatus {
       Path logFile,
       Path lockFile) {
     var config = configStore.load(configFile);
-    var host = HostHardware.inspect();
     var artifactStates = artifactProvisioner.inspect();
     var projectNames = config.projects().stream().map(project -> project.name().value()).toList();
     var indexInspection = inspectIndexHealth(databaseFile, projectNames);
@@ -82,7 +81,6 @@ public final class SystemStatus {
         readFileSize(databaseFile, warnings),
         PathSupport.toPortableString(logFile),
         PathSupport.toPortableString(lockFile),
-        host,
         projectViews,
         artifactStates,
         indexStatus,
@@ -185,7 +183,6 @@ public final class SystemStatus {
       long databaseSize,
       String logFile,
       String lockFile,
-      HostHardware.HostInfo host,
       List<ProjectView> projects,
       List<ArtifactProvisioner.ArtifactState> artifacts,
       String indexStatus,
@@ -209,7 +206,6 @@ public final class SystemStatus {
       out.println("===========");
       out.println();
       renderWorkspace(out);
-      renderHost(out);
       renderIndex(out);
       renderProjects(out, projectStatsAvailable, projectTotals);
       renderArtifacts(out);
@@ -233,33 +229,6 @@ public final class SystemStatus {
       out.println("  Log:              " + logFile);
       out.println("  Lock:             " + lockFile);
       out.println();
-    }
-
-    private void renderHost(PrintWriter out) {
-      printSection(out, "Host");
-      out.printf("  %-18s%s%n", "Platform:", host.platform());
-      var cores = host.logicalCores() > 0 ? " (" + host.logicalCores() + " logical cores)" : "";
-      out.printf("  %-18s%s%s%n", "CPU:", host.cpu(), cores);
-      out.printf("  %-18s%s%n", "Memory:", DisplayFormat.bytes(host.memoryBytes()));
-      if (host.graphics().isEmpty()) {
-        out.printf("  %-18s%s%n", "GPU:", "not detected");
-      }
-      for (var index = 0; index < host.graphics().size(); index++) {
-        var graphics = host.graphics().get(index);
-        var suffix = index == 0 ? "" : " " + (index + 1);
-        out.printf("  %-18s%s%n", "GPU" + suffix + ":", graphics.name());
-        out.printf("  %-18s%s%n", "VRAM" + suffix + ":", graphicsMemory(graphics));
-      }
-      out.println();
-    }
-
-    private String graphicsMemory(HostHardware.GpuInfo graphics) {
-      if (graphics.sharedMemory()) {
-        return host.memoryBytes() < 0
-            ? "shared unified memory"
-            : "shared (" + DisplayFormat.bytes(host.memoryBytes()) + " unified memory)";
-      }
-      return DisplayFormat.bytes(graphics.vramBytes());
     }
 
     private void renderIndex(PrintWriter out) {

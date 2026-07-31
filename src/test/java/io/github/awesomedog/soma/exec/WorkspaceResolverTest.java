@@ -61,6 +61,13 @@ class WorkspaceResolverTest {
     assertThat(main.configFile()).isEqualTo(tempDir.resolve("xdg-config/soma/main.yml"));
   }
 
+  @Test
+  void preservesUnicodeCompatibilityCharactersInWorkspaceNames() {
+    var workspace = resolver(environment(), tempDir).resolveWorkspace("Ａ..Ｂ");
+
+    assertThat(workspace.workspaceName()).isEqualTo("Ａ-Ｂ");
+  }
+
   private WorkspaceResolver resolver(Map<String, String> environment, Path workingDirectory) {
     return new WorkspaceResolver(environment, workingDirectory, tempDir.resolve("home"));
   }

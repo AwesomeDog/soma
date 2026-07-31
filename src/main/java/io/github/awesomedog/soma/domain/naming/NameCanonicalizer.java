@@ -1,6 +1,5 @@
 package io.github.awesomedog.soma.domain.naming;
 
-import java.text.Normalizer;
 import java.util.Objects;
 
 public final class NameCanonicalizer {
@@ -9,11 +8,10 @@ public final class NameCanonicalizer {
 
   public static String canonicalize(String input) {
     Objects.requireNonNull(input, "input");
-    var normalized = Normalizer.normalize(input, Normalizer.Form.NFKC);
     var canonical = new StringBuilder();
     var separatorPending = false;
-    for (var offset = 0; offset < normalized.length(); ) {
-      var codePoint = normalized.codePointAt(offset);
+    for (var offset = 0; offset < input.length(); ) {
+      var codePoint = input.codePointAt(offset);
       offset += Character.charCount(codePoint);
       if (Character.isLetterOrDigit(codePoint) || codePoint == '_' || codePoint == '-') {
         if (separatorPending && !canonical.isEmpty()) {

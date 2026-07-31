@@ -88,7 +88,7 @@ soma
 │   ├── set <path> <text>                      # Set context
 │   └── remove <path>                          # Remove context
 │
-├── status                                     # System and host hardware status
+├── status                                     # Workspace, index and managed-artifact status
 ├── init                                       # Create local workspace and add current directory
 │
 └── system                                     # Diagnostics/maintenance; prefer sync
@@ -107,7 +107,7 @@ WORKSPACE: -w/--workspace > directory-local > SOMA_DEFAULT_WORKSPACE > XDG 'main
 
 ## Core Concepts
 
-- **Project** — named file set: root + include/exclude globs + search-scope attributes. Name canonicalization: keep Unicode letters/numbers, `_`, `-`; other chars → `-`; strip leading/trailing `_`/`-`; reject empty result.
+- **Project** — named file set: root + include/exclude globs + search-scope attributes. Name canonicalization: keep Unicode letters/numbers, `_`, `-`; each run of other chars → one `-`; strip leading/trailing `_`/`-`; reject empty result.
 - **Document** — one indexed file (`~/docs/api.md` in project `docs` → `soma://docs/api.md`). *Ready* = searchable; *pending*/*failed* = not.
 - **Workspace** — selects config and index DB at startup to isolate environments; owns no source files; only management command is `init`. Selection order: `-w` → nearest directory-local workspace upward from CWD → `SOMA_DEFAULT_WORKSPACE` → XDG workspace `main`. Names follow project canonicalization.
 - **Chunk** — document section used for embedding and semantic retrieval.
@@ -519,7 +519,7 @@ soma context -p docs remove /api
 
 #### `soma status`
 
-Show system status: host CPU, memory, graphics and video memory; workspace source and paths, project stats, health warnings, model info.
+Show system status: workspace source and paths, project and index stats, health warnings, and managed-artifact info.
 
 Options: none.
 
