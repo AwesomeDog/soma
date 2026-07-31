@@ -237,6 +237,9 @@ final class HybridSearch {
       var seenPaths = new LinkedHashSet<String>();
       var rank = 0;
       for (var hit : ranking.hits()) {
+        if (!hasText(hit.documentBody())) {
+          continue;
+        }
         if (!seenPaths.add(hit.virtualPath())) {
           continue;
         }
