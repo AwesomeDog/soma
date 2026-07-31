@@ -1,7 +1,6 @@
 package io.github.awesomedog.soma.infra.sqlite;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.github.awesomedog.soma.app.common.AppError;
 import io.github.awesomedog.soma.app.common.AppException;
@@ -201,14 +200,14 @@ class SystemMaintenanceIntegrationTest {
   }
 
   @Test
-  void embeddingBatchFailuresReturnAnErrorAndRetryMissingWork() throws Exception {
-    for (var position = 0; position < 32; position++) {
+  void embeddingBatchFailuresAreReportedAndRetryMissingWork() throws Exception {
+    for (var position = 0; position < 64; position++) {
       Files.writeString(
           docsRoot.resolve("batch-%02d.md".formatted(position)),
           "# Batch " + position + "\nBATCH_MARKER_" + position);
     }
     Files.writeString(
-        docsRoot.resolve("zz-embedding-failure.md"),
+        docsRoot.resolve("batch-31a-embedding-failure.md"),
         "# Embedding Failure\nEMBEDDING_FAILURE_MARKER");
     searchModels.embeddingFailures.put(
         "EMBEDDING_FAILURE_MARKER",
@@ -216,18 +215,17 @@ class SystemMaintenanceIntegrationTest {
     projectScanning.scanAll(configFile, database, WRITE_LOCK, ignored -> {});
     contentExtraction.extractPending(configFile, database, WRITE_LOCK, ignored -> {});
 
-    assertThatThrownBy(
-            () ->
-                embeddingGeneration.generate(
-                    configFile, database, List.of(), WRITE_LOCK, ignored -> {}))
-        .isInstanceOf(AppException.class);
-    assertThat(vectorCount(List.of("docs", "archive"))).isEqualTo(32);
+    var partial =
+        embeddingGeneration.generate(configFile, database, List.of(), WRITE_LOCK, ignored -> {});
+    assertThat(partial.counts()).containsEntry("documents", 36).containsEntry("chunks", 36);
+    assertThat(partial.message()).contains("32 failed chunks");
+    assertThat(vectorCount(List.of("docs", "archive"))).isEqualTo(36);
 
     searchModels.embeddingFailures.clear();
     var retry =
         embeddingGeneration.generate(configFile, database, List.of(), WRITE_LOCK, ignored -> {});
-    assertThat(retry.counts()).containsEntry("documents", 4).containsEntry("chunks", 4);
-    assertThat(vectorCount(List.of("docs", "archive"))).isEqualTo(36);
+    assertThat(retry.counts()).containsEntry("documents", 32).containsEntry("chunks", 32);
+    assertThat(vectorCount(List.of("docs", "archive"))).isEqualTo(68);
   }
 
   private void assertScanExtractionAndInitialEmbedding() {

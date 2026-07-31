@@ -252,6 +252,11 @@ public final class ManagedSearchModels implements SearchModels {
       }
       vectors[data.index()] = vector;
     }
+    for (var vector : vectors) {
+      if (vector == null) {
+        throw runtimeFailure("The embedding runtime returned an invalid response.");
+      }
+    }
     return List.copyOf(java.util.Arrays.asList(vectors));
   }
 

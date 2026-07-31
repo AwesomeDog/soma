@@ -127,7 +127,7 @@ final class SqliteSemanticStore {
     }
     var sql =
         """
-        SELECT d.id, d.project_name, d.title, d.content_hash,
+        SELECT d.id, d.project_name, d.path, d.title, d.content_hash,
                c.chunk_index, c.body AS chunk_body
         FROM documents AS d
         JOIN chunks AS c ON c.content_hash = d.content_hash
@@ -151,6 +151,7 @@ final class SqliteSemanticStore {
               new EmbeddingWork(
                   resultSet.getLong("id"),
                   resultSet.getString("project_name"),
+                  resultSet.getString("path"),
                   resultSet.getString("title"),
                   resultSet.getString("content_hash"),
                   resultSet.getInt("chunk_index"),

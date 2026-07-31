@@ -12,6 +12,7 @@ import io.github.awesomedog.soma.app.ports.WorkspaceIndex;
 import io.github.awesomedog.soma.app.ports.WriteLock;
 import io.github.awesomedog.soma.app.project.ProjectSelection;
 import io.github.awesomedog.soma.domain.config.SomaConfig;
+import io.github.awesomedog.soma.domain.document.VirtualPath;
 import io.github.awesomedog.soma.domain.project.ProjectName;
 import io.github.awesomedog.soma.domain.recipe.RecipeId;
 import jakarta.inject.Singleton;
@@ -23,10 +24,13 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Singleton
 public final class EmbeddingGeneration {
 
+  private static final Logger LOG = LoggerFactory.getLogger(EmbeddingGeneration.class);
   private static final int BATCH_SIZE = 32;
 
   private final ConfigStore configStore;
@@ -87,9 +91,24 @@ public final class EmbeddingGeneration {
           Map.of("documents", 0, "chunks", 0));
     }
 
+    var completedWork = new ArrayList<WorkspaceIndex.EmbeddingWork>();
+    var failedChunkCount = 0;
     for (var start = 0; start < embeddingWork.size(); start += BATCH_SIZE) {
       var batch = embeddingWork.subList(start, Math.min(start + BATCH_SIZE, embeddingWork.size()));
-      writeEmbeddingBatch(batch, metadata);
+      List<WorkspaceIndex.EmbeddingWrite> writes = List.of();
+      try {
+        writes = generateEmbeddingBatch(batch, metadata);
+      } catch (AppException failure) {
+        if (Thread.currentThread().isInterrupted()) {
+          throw failure;
+        }
+        failedChunkCount += batch.size();
+        reportEmbeddingBatchFailure(batch, failure, events);
+      }
+      if (!writes.isEmpty()) {
+        workspaceIndex.writeEmbeddings(writes);
+        completedWork.addAll(batch);
+      }
       events.accept(
           ProgressEvent.update(
               "Embedding ready documents",
@@ -97,10 +116,10 @@ public final class EmbeddingGeneration {
               embeddingWork.size(),
               WorkUnit.CHUNKS));
     }
-    return completedReport(embeddingWork, startNanos);
+    return completedReport(completedWork, failedChunkCount, startNanos);
   }
 
-  private void writeEmbeddingBatch(
+  private List<WorkspaceIndex.EmbeddingWrite> generateEmbeddingBatch(
       List<WorkspaceIndex.EmbeddingWork> work, SearchModels.EmbeddingMetadata metadata) {
     var inputs = new ArrayList<EmbeddingInput>(work.size());
     for (var item : work) {
@@ -125,33 +144,71 @@ public final class EmbeddingGeneration {
     var writes = new ArrayList<WorkspaceIndex.EmbeddingWrite>(inputs.size());
     for (var position = 0; position < inputs.size(); position++) {
       var input = inputs.get(position);
+      var vector = vectors.get(position);
+      if (!validEmbeddingVector(vector, metadata.dimensions())) {
+        throw new AppException(
+            OPERATION_FAILED,
+            "The managed embedding runtime returned an invalid vector.",
+            "Run `soma sync`, then retry.");
+      }
       writes.add(
           new WorkspaceIndex.EmbeddingWrite(
-              input.work().documentId(),
-              input.work().chunkIndex(),
-              input.tokenCount(),
-              vectors.get(position)));
+              input.work().documentId(), input.work().chunkIndex(), input.tokenCount(), vector));
     }
-    workspaceIndex.writeEmbeddings(writes);
+    return writes;
   }
 
   private static OperationReport completedReport(
-      List<WorkspaceIndex.EmbeddingWork> work, long startNanos) {
+      List<WorkspaceIndex.EmbeddingWork> completedWork, int failedChunkCount, long startNanos) {
     var documentCount =
-        (int) work.stream().map(WorkspaceIndex.EmbeddingWork::documentId).distinct().count();
+        (int)
+            completedWork.stream().map(WorkspaceIndex.EmbeddingWork::documentId).distinct().count();
     var counts = new LinkedHashMap<String, Integer>();
     counts.put("documents", documentCount);
-    counts.put("chunks", work.size());
+    counts.put("chunks", completedWork.size());
+    var failures = failedChunkCount == 0 ? "" : "; skipped " + failedChunkCount + " failed chunks";
     return new OperationReport(
         "embed",
         "Done! Embedded "
-            + work.size()
+            + completedWork.size()
             + " chunks from "
             + documentCount
-            + " documents in "
+            + " documents"
+            + failures
+            + " in "
             + DisplayFormat.duration(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos))
             + ".",
         counts);
+  }
+
+  private static boolean validEmbeddingVector(float[] vector, int dimensions) {
+    if (vector == null || vector.length != dimensions) {
+      return false;
+    }
+    for (var component : vector) {
+      if (!Float.isFinite(component)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private static void reportEmbeddingBatchFailure(
+      List<WorkspaceIndex.EmbeddingWork> batch,
+      AppException failure,
+      Consumer<ProgressEvent> events) {
+    var paths =
+        batch.stream()
+            .map(work -> new VirtualPath(work.project(), work.path()).toString())
+            .distinct()
+            .toList();
+    LOG.warn("Embedding batch failed for {}: {}", paths, failure.getMessage(), failure);
+    events.accept(
+        ProgressEvent.message(
+            "Warning: Embedding batch failed for "
+                + String.join(", ", paths)
+                + ": "
+                + failure.getMessage()));
   }
 
   private List<String> selectedProjects(SomaConfig config, List<String> requested) {

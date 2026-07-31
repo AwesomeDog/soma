@@ -103,6 +103,7 @@ public interface WorkspaceIndex {
   record EmbeddingWork(
       long documentId,
       String project,
+      String path,
       String title,
       String contentHash,
       int chunkIndex,
