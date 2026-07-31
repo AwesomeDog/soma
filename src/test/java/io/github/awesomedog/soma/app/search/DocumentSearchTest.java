@@ -112,6 +112,53 @@ class DocumentSearchTest {
   }
 
   @Test
+  void hybridPreservesVectorEvidenceWhenLexicalHitCreatedCandidate() {
+    var index = new RecordingIndex();
+    var contentHash = hash(1);
+    var documentBody = "unrelated first chunk\nsemantic answer";
+    index.lexicalHits =
+        List.of(hit("docs", "guide.md", contentHash, documentBody, documentBody, 0.9));
+    index.vectorHits =
+        List.of(
+            vectorHit("docs", "guide.md", contentHash, "semantic answer", documentBody, 1, 0.8));
+    index.chunks =
+        List.of(
+            new WorkspaceIndex.ChunkRead(contentHash, 0, "unrelated first chunk", 0, 21),
+            new WorkspaceIndex.ChunkRead(contentHash, 1, "semantic answer", 22, 37));
+    var searchModels = new RecordingSearchModels();
+
+    service(config(), index, searchModels)
+        .search(
+            CONFIG,
+            DATABASE,
+            hybridRequest(null, "literal mismatch", "semantic query", null, null, false, false),
+            null);
+
+    assertThat(searchModels.rerankCandidates.getFirst()).containsExactly("semantic answer");
+  }
+
+  @Test
+  void hybridUsesSearchInputBeforeIntentToChooseEvidence() {
+    var index = new RecordingIndex();
+    var contentHash = hash(1);
+    index.lexicalHits = List.of(hit("docs", "guide.md", contentHash, "body", "body", 0.9));
+    index.chunks =
+        List.of(
+            new WorkspaceIndex.ChunkRead(contentHash, 0, "background details", 0, 18),
+            new WorkspaceIndex.ChunkRead(contentHash, 1, "primary answer", 19, 33));
+    var searchModels = new RecordingSearchModels();
+
+    service(config(), index, searchModels)
+        .search(
+            CONFIG,
+            DATABASE,
+            hybridRequest(null, "primary", null, null, "background", false, false),
+            null);
+
+    assertThat(searchModels.rerankCandidates.getFirst()).containsExactly("primary answer");
+  }
+
+  @Test
   void validatesLexicalInputWhenSearchScopeIsEmpty() {
     assertThatThrownBy(
             () ->
@@ -237,6 +284,28 @@ class DocumentSearchTest {
         null,
         null,
         null,
+        score);
+  }
+
+  private static WorkspaceIndex.SearchHit vectorHit(
+      String project,
+      String path,
+      String contentHash,
+      String evidenceBody,
+      String documentBody,
+      int chunkIndex,
+      double score) {
+    var startOffset = documentBody.indexOf(evidenceBody);
+    return new WorkspaceIndex.SearchHit(
+        project,
+        path,
+        title(path),
+        contentHash,
+        evidenceBody,
+        documentBody,
+        chunkIndex,
+        startOffset,
+        startOffset + evidenceBody.length(),
         score);
   }
 

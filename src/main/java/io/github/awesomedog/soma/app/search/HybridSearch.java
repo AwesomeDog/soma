@@ -248,6 +248,9 @@ final class HybridSearch {
             candidatesByPath.computeIfAbsent(
                 hit.virtualPath(),
                 ignored -> new Candidate(hit, config.effectiveContext(hit.project(), hit.path())));
+        if (candidate.hit.chunkIndex() == null && hit.chunkIndex() != null) {
+          candidate.hit = hit;
+        }
         var contribution = ranking.query().weight() / (RRF_K + rank);
         candidate.weightedRrfScore += contribution;
         candidate.bestSourceRank = Math.min(candidate.bestSourceRank, rank);
@@ -366,11 +369,7 @@ final class HybridSearch {
     }
     var selectionQuery =
         firstNonBlank(
-            request.intent(),
-            request.query(),
-            request.lexicalInput(),
-            request.vectorInput(),
-            request.hydeInput());
+            request.query(), request.lexicalInput(), request.vectorInput(), request.hydeInput());
     var selected = new ArrayList<Candidate>(candidates.size());
     for (var candidate : candidates) {
       var chunks = chunksByHash.getOrDefault(candidate.hit.contentHash(), List.of());
@@ -380,7 +379,9 @@ final class HybridSearch {
             "Persisted chunks are missing for reranking evidence.",
             "Run `soma sync`, then retry.");
       }
-      candidate.selectEvidence(bestChunk(chunks, selectionQuery, request.intent()));
+      if (candidate.hit.chunkIndex() == null) {
+        candidate.selectEvidence(bestChunk(chunks, selectionQuery, request.intent()));
+      }
       selected.add(candidate);
     }
     return List.copyOf(selected);
