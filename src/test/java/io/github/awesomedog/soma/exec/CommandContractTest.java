@@ -509,7 +509,7 @@ class CommandContractTest {
   }
 
   @Test
-  void initializesALocalWorkspaceWhenWorkspaceOptionIsIgnored() throws Exception {
+  void initializesALocalWorkspaceIdempotentlyWhenWorkspaceOptionIsIgnored() throws Exception {
     var workspace = workspace(tempDir);
     try (var context = context(workspace)) {
       var runner = context.getBean(CommandRunner.class);
@@ -518,16 +518,44 @@ class CommandContractTest {
       assertThat(first.exitCode()).isZero();
       assertThat(first.invocation().recordedError()).isNull();
       assertThat(tempDir.resolve(".soma/local.yml")).isRegularFile();
-      assertThat(tempDir.resolve(".soma/local.sqlite")).isRegularFile();
-      assertThat(Files.readString(tempDir.resolve(".soma/local.yml"))).contains("root: .");
+      assertThat(tempDir.resolve(".soma/local.sqlite")).doesNotExist();
+      var emptyConfig = Files.readString(tempDir.resolve(".soma/local.yml"));
+      assertThat(emptyConfig).contains("projects: []");
 
       var second = run(runner, "init");
-      assertThat(second.exitCode()).isEqualTo(1);
-      assertThat(second.invocation().recordedError())
+      assertThat(second.exitCode()).isZero();
+      assertThat(second.invocation().recordedError()).isNull();
+      assertThat(Files.readString(tempDir.resolve(".soma/local.yml"))).isEqualTo(emptyConfig);
+
+      assertThat(run(runner, "project", "add", tempDir.toString(), "--name", "local").exitCode())
+          .isZero();
+      assertThat(tempDir.resolve(".soma/local.sqlite")).isRegularFile();
+      var configured = Files.readString(tempDir.resolve(".soma/local.yml"));
+      assertThat(configured).contains("name: local", "root: .");
+
+      assertThat(run(runner, "init").exitCode()).isZero();
+      assertThat(Files.readString(tempDir.resolve(".soma/local.yml"))).isEqualTo(configured);
+
+    } finally {
+      Logging.close();
+    }
+  }
+
+  @Test
+  void rejectsAnInvalidExistingLocalWorkspaceWithoutReplacingIt() throws Exception {
+    var configFile = tempDir.resolve(".soma/local.yml");
+    Files.createDirectories(configFile.getParent());
+    Files.writeString(configFile, "projects: [\n");
+    try (var context = context(workspace(tempDir))) {
+      var result = run(context.getBean(CommandRunner.class), "init");
+
+      assertThat(result.exitCode()).isEqualTo(1);
+      assertThat(result.invocation().recordedError())
           .isInstanceOfSatisfying(
               AppError.class,
               error -> assertThat(error.code()).isEqualTo(AppError.Code.CONFIG_ERROR));
-
+      assertThat(configFile).hasContent("projects: [\n");
+      assertThat(tempDir.resolve(".soma/local.sqlite")).doesNotExist();
     } finally {
       Logging.close();
     }

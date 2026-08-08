@@ -161,12 +161,6 @@ public final class ProjectCommand extends SubcommandRequiredCommand {
         noDefaultSearch);
   }
 
-  public int addCurrentDirectory(Invocation invocation) {
-    var localWorkspaceRoot = workspace.configFile().getParent().getParent();
-    return add(
-        invocation, localWorkspaceRoot.toString(), null, List.of("**/*"), List.of(), false, false);
-  }
-
   private int add(
       Invocation invocation,
       String requestedRoot,

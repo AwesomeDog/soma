@@ -312,11 +312,11 @@ public final class FileWriteLock implements WriteLock {
 
 **Who locks**:
 
-- Locks: `sync`, `init`, `project add/update/remove/rename`, `context set/remove`, `system scan/extract/embed/clean`, RPC
+- Locks: `sync`, `project add/update/remove/rename`, `context set/remove`, `system scan/extract/embed/clean`, RPC
   writes, auto-sync ticks (logs/skips busy).
-- No lock: search/get/status/list/show, pull, startup, artifact provision, cache access. Readers use WAL +
+- No lock: `init` (atomic create or read-only no-op), search/get/status/list/show, pull, startup, artifact provision, cache access. Readers use WAL +
   busy_timeout.
-- Config writers lock before read through RMW + publication + index work.
+- Config RMW writers acquire the lock before reading and hold it through publication + index work.
 - Non-reentrant: `sync` provisions then passes one token through phases; phases do short consistent batches.
 
 **Message**: Immediate `WRITE_LOCKED` with pid/command/acquiredAt (or unknown). Advise wait or manual PID check.

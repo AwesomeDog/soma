@@ -23,8 +23,9 @@ soma search lexical "authentication"
 # Optional: built-in web UI (http://localhost:8181)
 soma server --auto-sync
 
-# Optional: soma init — keeps config + index in .soma/, so the search data travels with the directory
+# Optional: soma init — initialize a directory-local workspace to keep config + index in .soma/, so the search data travels with the directory
 soma init
+soma project add .
 
 # Optional: read file content — by path or by the DocID shown in results
 soma get notes/api.md
@@ -89,7 +90,7 @@ soma
 │   └── remove <path>                          # Remove context
 │
 ├── status                                     # Workspace, index and managed-artifact status
-├── init                                       # Create local workspace and add current directory
+├── init                                       # Create directory-local workspace
 │
 └── system                                     # Diagnostics/maintenance; prefer sync
     ├── pull [--refresh]                       # Download/refresh managed artifacts
@@ -532,9 +533,9 @@ soma status
 #### `soma init`
 
 - Creates a directory-local workspace at `.soma/local.yml`.
-- Adds the current directory as the initial project using the `project add .` defaults; its root is `.`.
-- Allows additional projects only inside the workspace. Roots use portable `/`-separated relative paths so they remain valid when the directory moves between supported operating systems.
-- Rejected in the home directory; existing `.soma/local.yml` → `CONFIG_ERROR`.
+- Does not add or scan projects, or create the index DB; run `soma project add .` next. The DB remains lazy and is created by the first index operation.
+- Projects must stay inside the workspace. Roots use portable `/`-separated relative paths so they remain valid when the directory moves between supported operating systems.
+- Rejected in the home directory. An existing valid `.soma/local.yml` succeeds without changing it; an invalid one → `CONFIG_ERROR`.
 
 Options: none.
 

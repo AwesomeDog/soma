@@ -52,11 +52,16 @@ public final class WorkspaceInitializer {
         }
       }
     } catch (FileAlreadyExistsException e) {
-      throw new AppException(
-          CONFIG_ERROR,
-          "Directory-local workspace already exists: " + configFile,
-          "Use the existing workspace or remove it explicitly before retrying.",
-          e);
+      if (!Files.isRegularFile(configFile)) {
+        throw new AppException(
+            CONFIG_ERROR,
+            "Could not initialize directory-local workspace: " + configFile,
+            "Fix or remove the conflicting path, then retry.",
+            e);
+      }
+      var existing = configStore.load(configFile);
+      return new InitResult(
+          PathSupport.toPortableString(configFile), false, !existing.projects().isEmpty());
     } catch (IOException e) {
       throw new AppException(
           CONFIG_ERROR,
@@ -64,17 +69,24 @@ public final class WorkspaceInitializer {
           "Check file permissions and available disk space, then retry.",
           e);
     }
-    return new InitResult(PathSupport.toPortableString(configFile));
+    return new InitResult(PathSupport.toPortableString(configFile), true, false);
   }
 
   @Serdeable
-  public record InitResult(String configFile) implements Renderable {
+  public record InitResult(String configFile, boolean created, boolean hasProjects)
+      implements Renderable {
 
     @Override
     public void render(OutputFormat format, PrintWriter out) {
       requireTextFormat(format);
-      out.println("Directory-local workspace created.");
+      out.println(
+          created
+              ? "Directory-local workspace created."
+              : "Directory-local workspace already initialized.");
       out.println("  Config: " + configFile);
+      if (!hasProjects) {
+        out.println("Next: run `soma project add .` to add a project.");
+      }
     }
   }
 }
