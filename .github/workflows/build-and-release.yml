@@ -99,6 +99,8 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v')
     permissions:
       contents: write
+      id-token: write
+      attestations: write
     steps:
       - name: Download all artifacts
         uses: actions/download-artifact@v8
@@ -107,6 +109,14 @@ jobs:
 
       - name: Display structure of downloaded files
         run: ls -R artifacts
+
+      - name: Attest release artifacts
+        uses: actions/attest@v4
+        with:
+          subject-path: |
+            artifacts/macos-builds/soma-mac-arm64
+            artifacts/windows-builds/soma-windows-x64.exe
+            artifacts/linux-builds/soma-linux-x64
 
       - name: Create Release
         uses: softprops/action-gh-release@v3
