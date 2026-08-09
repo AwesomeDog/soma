@@ -4,6 +4,7 @@ import io.github.awesomedog.soma.app.common.AppError;
 import io.github.awesomedog.soma.exec.CommandRunner;
 import io.github.awesomedog.soma.exec.Invocation;
 import io.github.awesomedog.soma.infra.logging.Logging;
+import io.github.awesomedog.soma.infra.runtime.WindowsJob;
 import io.micronaut.context.ApplicationContext;
 import io.micronaut.context.env.Environment;
 import java.util.Map;
@@ -22,6 +23,7 @@ public final class SomaApplication {
   static void main(String[] args) {
     int exitCode;
     try {
+      WindowsJob.installForCurrentProcess();
       exitCode = run(args);
     } catch (Throwable failure) {
       System.err.println(
