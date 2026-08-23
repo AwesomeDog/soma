@@ -3,7 +3,6 @@ package io.github.awesomedog.soma.app.system;
 import static io.github.awesomedog.soma.app.common.AppError.Code.OPERATION_FAILED;
 
 import io.github.awesomedog.soma.app.common.AppException;
-import io.github.awesomedog.soma.app.common.DisplayFormat;
 import io.github.awesomedog.soma.app.common.ProgressEvent;
 import io.github.awesomedog.soma.app.common.ProgressEvent.WorkUnit;
 import io.github.awesomedog.soma.app.ports.ConfigStore;
@@ -86,9 +85,10 @@ public final class EmbeddingGeneration {
     var embeddingWork = workspaceIndex.embeddingWork(projects);
     if (embeddingWork.isEmpty()) {
       return new OperationReport(
-          "embed",
-          "All ready documents already have embeddings.",
-          Map.of("documents", 0, "chunks", 0));
+              "embed",
+              "All ready documents already have embeddings.",
+              Map.of("documents", 0, "chunks", 0))
+          .withDuration(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos));
     }
 
     var completedWork = new ArrayList<WorkspaceIndex.EmbeddingWork>();
@@ -116,7 +116,8 @@ public final class EmbeddingGeneration {
               embeddingWork.size(),
               WorkUnit.CHUNKS));
     }
-    return completedReport(completedWork, failedChunkCount, startNanos);
+    return completedReport(completedWork, failedChunkCount)
+        .withDuration(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos));
   }
 
   private List<WorkspaceIndex.EmbeddingWrite> generateEmbeddingBatch(
@@ -159,7 +160,7 @@ public final class EmbeddingGeneration {
   }
 
   private static OperationReport completedReport(
-      List<WorkspaceIndex.EmbeddingWork> completedWork, int failedChunkCount, long startNanos) {
+      List<WorkspaceIndex.EmbeddingWork> completedWork, int failedChunkCount) {
     var documentCount =
         (int)
             completedWork.stream().map(WorkspaceIndex.EmbeddingWork::documentId).distinct().count();
@@ -175,8 +176,6 @@ public final class EmbeddingGeneration {
             + documentCount
             + " documents"
             + failures
-            + " in "
-            + DisplayFormat.duration(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos))
             + ".",
         counts);
   }

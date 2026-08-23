@@ -53,6 +53,7 @@ public final class ContentExtraction {
       Path databaseFile,
       WriteLock.Token token,
       Consumer<ProgressEvent> progress) {
+    var startNanos = System.nanoTime();
     var progressEvents = progress == null ? (Consumer<ProgressEvent>) ignored -> {} : progress;
     workspaceIndex.openExistingForWrite(databaseFile, token);
     var desiredRecipeIds = desiredRecipeIds();
@@ -61,16 +62,15 @@ public final class ContentExtraction {
     var extractionWorkItems = workspaceIndex.extractionWork();
     if (extractionWorkItems.isEmpty()) {
       return new OperationReport(
-          "extract", "No pending rich/media extractions.", Map.of("processed", 0));
+              "extract", "No pending rich/media extractions.", Map.of("processed", 0))
+          .withDuration(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos));
     }
-    var startNanos = System.nanoTime();
     var projectConfigByName = mapProjectConfigsByName(config.projects());
     var extractionSummary =
         processExtractionWork(
             extractionWorkItems, projectConfigByName, desiredRecipeIds, progressEvents);
-    var elapsedMilliseconds = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos);
-    return completedExtractionReport(
-        extractionWorkItems.size(), extractionSummary, elapsedMilliseconds);
+    return completedExtractionReport(extractionWorkItems.size(), extractionSummary)
+        .withDuration(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos));
   }
 
   private ExtractionSummary processExtractionWork(
@@ -112,7 +112,7 @@ public final class ContentExtraction {
   }
 
   private static OperationReport completedExtractionReport(
-      int processedDocumentCount, ExtractionSummary extractionSummary, long elapsedMilliseconds) {
+      int processedDocumentCount, ExtractionSummary extractionSummary) {
     return new OperationReport(
         "extract",
         "Processed "
@@ -123,9 +123,7 @@ public final class ContentExtraction {
             + extractionSummary.failedDocumentCount()
             + " failed, "
             + extractionSummary.skippedDocumentCount()
-            + " skipped in "
-            + elapsedMilliseconds
-            + " ms.",
+            + " skipped.",
         Map.of(
             "processed",
             processedDocumentCount,

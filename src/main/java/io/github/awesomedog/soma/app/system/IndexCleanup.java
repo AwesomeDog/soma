@@ -6,6 +6,7 @@ import jakarta.inject.Singleton;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 @Singleton
 public final class IndexCleanup {
@@ -17,15 +18,17 @@ public final class IndexCleanup {
   }
 
   public OperationReport removeOrphans(Path databaseFile, WriteLock.Token token) {
+    var startNanos = System.nanoTime();
     workspaceIndex.openExistingForWrite(databaseFile, token);
     var removedContents = workspaceIndex.cleanOrphans();
     return new OperationReport(
-        "clean",
-        removedContents == 0
-            ? "No orphaned index records to remove."
-            : "Removed orphaned index data for "
-                + removedContents
-                + " unreferenced content record(s).",
-        Map.of("contents", removedContents));
+            "clean",
+            removedContents == 0
+                ? "No orphaned index records to remove."
+                : "Removed orphaned index data for "
+                    + removedContents
+                    + " unreferenced content record(s).",
+            Map.of("contents", removedContents))
+        .withDuration(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos));
   }
 }

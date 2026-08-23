@@ -19,6 +19,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
 
@@ -58,6 +59,7 @@ public final class ProjectScanning {
       WriteLock.Token token,
       Consumer<ProgressEvent> progress,
       boolean full) {
+    var startNanos = System.nanoTime();
     var progressEvents = progress == null ? (Consumer<ProgressEvent>) ignored -> {} : progress;
     progressEvents.accept(ProgressEvent.message("Preparing index"));
     workspaceIndex.openOrRebuildForScan(databaseFile, token);
@@ -114,7 +116,9 @@ public final class ProjectScanning {
                 progressEvents.accept(
                     ProgressEvent.update(
                         "Updating index", completed, synchronizationTotal, WorkUnit.FILES)));
-    return full ? fullReport(readDocuments) : incrementalReport(readDocuments.size(), applied);
+    var elapsedMilliseconds = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos);
+    return (full ? fullReport(readDocuments) : incrementalReport(readDocuments.size(), applied))
+        .withDuration(elapsedMilliseconds);
   }
 
   private Map<String, Map<String, WorkspaceIndex.DocumentSnapshot>> snapshots() {

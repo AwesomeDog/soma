@@ -6,6 +6,7 @@ import jakarta.inject.Singleton;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 @Singleton
@@ -23,9 +24,11 @@ public final class ArtifactProvisioning {
   }
 
   public OperationReport pullAsOperationReport(Consumer<ProgressEvent> progress) {
+    var startNanos = System.nanoTime();
     var report = pull(false, progress);
     return new OperationReport(
-        "pull", report.syncText(), Map.of("artifacts", report.artifacts().size()));
+            "pull", report.syncText(), Map.of("artifacts", report.artifacts().size()))
+        .withDuration(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos));
   }
 
   public ArtifactProvisioner.ArchiveReport exportArchive(
