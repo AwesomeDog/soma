@@ -1,97 +1,297 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Soma — Local Search Engine</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="description" content="Search Markdown, PDFs, images, audio, and video on your own machine. Soma combines keyword and semantic search on Windows, macOS, and Linux.">
+    <meta name="robots" content="index,follow,max-image-preview:large">
+    <meta name="application-name" content="Soma">
+    <meta name="theme-color" content="#f6f8fa">
+    <link rel="canonical" href="https://awesomedog.github.io/soma/">
+    <link rel="alternate" hreflang="en" href="https://awesomedog.github.io/soma/">
+    <link rel="alternate" hreflang="x-default" href="https://awesomedog.github.io/soma/">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Soma">
+    <meta property="og:title" content="Soma | Private Local AI Search for Your Files">
+    <meta property="og:description" content="Search documents, notes, images, audio, and video locally with keyword and semantic search.">
+    <meta property="og:url" content="https://awesomedog.github.io/soma/">
+    <meta property="og:image" content="https://awesomedog.github.io/soma/specs/icon.svg">
+    <meta property="og:image:alt" content="Soma local search logo">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Soma | Private Local AI Search for Your Files">
+    <meta name="twitter:description" content="A local AI search engine for documents, notes, images, audio, and video.">
+    <meta name="twitter:image" content="https://awesomedog.github.io/soma/specs/icon.svg">
+    <title>Soma | Private Local AI Search for Your Files</title>
     <link rel="icon" href="./specs/icon.svg" type="image/svg+xml" sizes="any">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "SoftwareApplication",
+          "name": "Soma",
+          "url": "https://awesomedog.github.io/soma/",
+          "description": "A private local AI search engine for documents, notes, images, audio, and video.",
+          "applicationCategory": "DeveloperApplication",
+          "operatingSystem": ["Windows", "macOS", "Linux"],
+          "downloadUrl": "https://github.com/AwesomeDog/soma/releases",
+          "sameAs": "https://github.com/AwesomeDog/soma",
+          "image": "https://awesomedog.github.io/soma/specs/icon.svg",
+          "publisher": {
+            "@type": "Organization",
+            "name": "AwesomeDog",
+            "url": "https://github.com/AwesomeDog"
+          }
+        },
+        {
+          "@type": "WebSite",
+          "name": "Soma",
+          "url": "https://awesomedog.github.io/soma/",
+          "publisher": {
+            "@type": "Organization",
+            "name": "AwesomeDog"
+          }
+        }
+      ]
+    }
+    </script>
     <style>
-        *{margin:0;box-sizing:border-box}
-        body{font:17px/1.65 -apple-system,"Helvetica Neue",Arial,sans-serif;color:#1d1d1f;background:#fff;-webkit-font-smoothing:antialiased}
-        .wrap{max-width:880px;margin:0 auto;padding:0 24px}
-        header{padding:16px 0;position:sticky;top:0;background:rgba(255,255,255,.85);backdrop-filter:blur(14px);border-bottom:1px solid #eee;z-index:9}
-        header .wrap{display:flex;justify-content:space-between;align-items:center}
-        .brand{display:flex;align-items:center;gap:9px;color:#1d1d1f;text-decoration:none;font-weight:600}
-        .brand img{display:block;width:34px;height:34px;border-radius:7px}
-        header nav a{color:#555;text-decoration:none;font-size:14px;margin-left:22px}
-        .hero{text-align:center;padding:130px 0 90px}
-        h1{font-size:64px;font-weight:700;letter-spacing:-.035em;line-height:1.05}
-        .hero p{font-size:24px;color:#6e6e73;margin:24px auto 40px;max-width:600px;font-weight:400}
-        .cta{display:inline-block;background:#0071e3;color:#fff;text-decoration:none;padding:14px 30px;border-radius:99px;font-size:17px}
-        .cta:hover{background:#0077ed}
-        .ghost{display:inline-block;color:#0071e3;text-decoration:none;padding:14px 20px;font-size:17px}
-        .kicker{text-transform:uppercase;letter-spacing:.14em;font-size:12px;color:#86868b;text-align:center;margin-bottom:14px}
-        h2{font-size:40px;font-weight:700;letter-spacing:-.025em;text-align:center;margin-bottom:56px}
-        section{padding:90px 0;border-top:1px solid #f0f0f0}
-        .flow{display:flex;justify-content:center;gap:14px;flex-wrap:wrap}
-        .flow div:not(.arrow){padding:26px 30px;background:#f5f5f7;border-radius:18px;min-width:170px;text-align:center}
-        .flow b{display:block;font-size:22px;letter-spacing:-.02em}
-        .flow span{color:#86868b;font-size:14px}
-        .arrow{align-self:center;color:#c7c7cc;font-size:22px}
-        .feat{display:grid;grid-template-columns:1fr 1fr;gap:56px 64px}
-        .feat h3{font-size:21px;letter-spacing:-.02em;margin-bottom:8px}
-        .feat p{color:#6e6e73;font-size:16px}
-        pre{background:#f5f5f7;border-radius:18px;padding:28px;font:14px/1.9 ui-monospace,"SF Mono",Menlo,monospace;color:#1d1d1f;white-space:pre-wrap;overflow-wrap:break-word;max-width:500px;margin:0 auto}
-        pre .c{color:#86868b}
-        pre a{color:inherit;text-decoration:underline}
-        pre a:hover{color:#0071e3}
-        .fine{text-align:center;color:#86868b;font-size:13px;margin-top:26px}
-        footer{padding:44px 0;color:#86868b;font-size:13px;text-align:center;border-top:1px solid #f0f0f0}
-        @media(max-width:720px){h1{font-size:42px}.feat{grid-template-columns:1fr}.arrow{display:none}}
+:root{--ink:#1d1d1f;--muted:#6e6e73;--line:#ededf0;--wash:#f5f5f7;--blue:#06c;--blue-dark:#0077ed;--max:1080px}
+*{box-sizing:border-box;margin:0}
+html{scroll-behavior:smooth}
+body{font:17px/1.55 -apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;color:var(--ink);background:#fff;-webkit-font-smoothing:antialiased}
+a{color:var(--blue)}a:focus-visible{outline:3px solid #f2b233;outline-offset:3px}
+.wrap{width:min(var(--max),calc(100% - 64px));margin:auto}
+.site-header{position:sticky;top:0;z-index:9;padding:12px 0;background:rgba(255,255,255,.86);backdrop-filter:blur(14px);border-bottom:1px solid #eee}
+.site-header .wrap,.footer-row,.site-nav,.hero-actions,.footer-links{display:flex;align-items:center;gap:20px;flex-wrap:wrap}.site-header .wrap,.footer-row{justify-content:space-between}
+.brand{display:flex;align-items:center;gap:9px;color:var(--ink);text-decoration:none;font-weight:600}.brand img{width:34px;height:34px;border-radius:7px}
+.site-nav,.footer-links{gap:24px}.site-nav a,.footer-links a{color:#555;text-decoration:none;font-size:14px}.site-nav a:hover,.footer-links a:hover{color:var(--blue)}
+section{padding:112px 0;border-top:1px solid var(--line);scroll-margin-top:76px}.band{background:var(--wash)}
+.hero{padding:148px 0 112px;text-align:center;border-top:0}.hero-inner,.section-heading{margin-right:auto;margin-left:auto;text-align:center}.hero-inner{max-width:920px}.section-heading{max-width:820px;margin-bottom:52px}
+.eyebrow,.tag{margin-bottom:14px;color:#86868b;font-size:12px;font-weight:600;text-transform:uppercase}
+h1,h2,h3{line-height:1.1;letter-spacing:0;font-weight:700}h1{font-size:72px}h2{font-size:48px}h3{font-size:21px;margin-bottom:8px}
+.lede{max-width:700px;margin:28px auto 44px;color:var(--muted);font-size:24px;line-height:1.45}.hero-actions{justify-content:center;gap:12px}
+.button{display:inline-flex;align-items:center;justify-content:center;padding:14px 30px;border:0;border-radius:99px;background:var(--blue);color:#fff;text-decoration:none;font-size:17px}.button:hover{background:var(--blue-dark)}
+.button.secondary{padding:14px 20px;background:transparent;color:var(--blue)}.button.secondary:hover{background:transparent;color:var(--blue-dark)}
+.hero-note,.requirements{max-width:760px;margin:24px auto 0;color:var(--muted);font-size:13px}
+.section-heading>p:not(.eyebrow){max-width:700px;margin:18px auto 0;color:var(--muted);font-size:18px;text-align:center}
+.audience-grid,.feature-grid,.steps,.install-grid,.faq-grid{display:grid;gap:28px}.audience-grid,.feature-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+.audience-grid article{display:flex;flex-direction:column;padding:34px 30px;background:var(--wash);border-radius:18px;text-align:center}.tag{margin-bottom:8px}
+.audience-grid p:last-child,.feature-grid p,.steps p,.faq-grid p,.install-card p{color:var(--muted)}
+.steps{grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;padding:0;list-style:none}.steps li{position:relative;padding:30px;background:var(--wash);border-radius:18px;text-align:center}.steps li+li:before{content:"→";position:absolute;left:-18px;top:50%;color:#c7c7cc;font-size:22px;transform:translateY(-50%)}.step-number{display:block;margin-bottom:12px;color:#86868b;font-size:12px;font-weight:600}
+code{font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;overflow-wrap:anywhere}.steps code,.install-card pre{display:block;padding:16px 18px;border:1px solid #e5e5ea;border-radius:14px;background:#fff;color:var(--ink);text-align:left;white-space:pre-wrap;overflow:auto;box-shadow:0 1px 2px rgba(0,0,0,.04)}.steps code{margin-top:16px}
+.feature-grid article,.faq-grid article{padding:0}.feature-grid h3{margin-bottom:8px}
+.privacy{background:var(--wash);color:var(--ink)}.privacy .privacy-list{color:var(--ink)}.privacy-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;padding:0;list-style:none}.privacy-list li{padding:30px 24px;background:#fff;border-radius:18px;text-align:center}
+.install-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:24px}.install-card{padding:30px 24px;background:var(--wash);border-radius:18px;text-align:center}.install-card pre{min-height:134px;margin:0 0 18px}.install-card a{font-weight:600}
+.faq-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:48px 80px}.faq-grid h3{font-size:19px}
+.site-footer{padding:44px 0;border-top:1px solid var(--line);color:#86868b;font-size:13px;text-align:center}.footer-row{justify-content:center}.footer-links{justify-content:center}
+@media(max-width:720px){.wrap{width:calc(100% - 32px)}.site-header .wrap{align-items:flex-start}.site-nav{gap:8px 14px}h1{font-size:44px}h2{font-size:34px}.lede{font-size:19px}.audience-grid,.feature-grid,.steps,.install-grid,.faq-grid,.privacy-list{grid-template-columns:1fr}section{padding:80px 0}.hero{padding:96px 0 72px}.section-heading{margin-bottom:36px}.hero-actions{align-items:stretch;flex-direction:column}.button{width:100%}.steps li+li:before{display:none}}
     </style>
 </head>
 <body>
-<header><div class="wrap"><a class="brand" href="#" aria-label="Soma home"><img src="./specs/icon.svg" alt="" width="34" height="34">Soma</a>
-    <nav><a href="#how">How it works</a><a href="#features">Features</a><a href="#get">Download</a><a href="https://github.com/AwesomeDog/soma" target="_blank">GitHub</a></nav></div></header>
+<header class="site-header">
+    <div class="wrap">
+        <a class="brand" href="./" aria-label="Soma home"><img src="./specs/icon.svg" alt="" width="34" height="34">Soma</a>
+        <nav class="site-nav" aria-label="Primary navigation">
+            <a href="#use-cases">Use cases</a>
+            <a href="#how">How it works</a>
+            <a href="#features">Features</a>
+            <a href="#install">Install</a>
+            <a href="https://github.com/AwesomeDog/soma" target="_blank" rel="noopener noreferrer">GitHub</a>
+        </nav>
+    </div>
+</header>
 
-<section class="hero wrap">
-    <h1>All your knowledge.<br>One search away.</h1>
-    <p>A local knowledge-base search engine that understands your documents, images, audio and video. Nothing leaves your machine.</p>
-    <a class="cta" href="#get">Download for free</a>
-    <a class="ghost" href="#how">Learn more ›</a>
-</section>
+<main>
+    <section class="hero" aria-labelledby="hero-title">
+        <div class="wrap hero-inner">
+            <p class="eyebrow">Private local document search</p>
+            <h1 id="hero-title">Private AI search for your local files.</h1>
+            <p class="lede">Soma is a local knowledge-base search engine for Markdown, PDFs, images, audio, and video. Ask a natural-language question or use exact keywords, with indexing and retrieval on your own machine.</p>
+            <div class="hero-actions">
+                <a class="button" href="#install">Install Soma</a>
+                <a class="button secondary" href="https://github.com/AwesomeDog/soma#quick-start" target="_blank" rel="noopener noreferrer">Read the quick start</a>
+            </div>
+            <p class="hero-note">Soma does not require a hosted document index. The first sync may download managed models and runtimes; your indexed content stays in your local workspace.</p>
+        </div>
+    </section>
 
-<section id="how"><div class="wrap">
-    <div class="kicker">The mental model</div>
-    <h2>Three steps. That's it.</h2>
-    <div class="flow">
-        <div><b>add</b><span>a project</span></div><div class="arrow">→</div>
-        <div><b>sync</b><span>make it ready</span></div><div class="arrow">→</div>
-        <div><b>search</b><span>find anything</span></div>
-    </div></div>
-</section>
+    <section id="use-cases" aria-labelledby="use-cases-title">
+        <div class="wrap">
+            <div class="section-heading">
+                <p class="eyebrow">Made for real folders</p>
+                <h2 id="use-cases-title">Find answers in the files you already have.</h2>
+                <p>Keep your existing projects, notes, and recordings. Soma turns them into one searchable local knowledge base without asking you to migrate to a hosted service.</p>
+            </div>
+            <div class="audience-grid">
+                <article>
+                    <p class="tag">Developers and ops</p>
+                    <h3>Docs, code, and runbooks</h3>
+                    <p>Search API notes, deployment guides, incident response steps, and configuration details by meaning or by exact term.</p>
+                </article>
+                <article>
+                    <p class="tag">Researchers and note-takers</p>
+                    <h3>Markdown, meetings, and journals</h3>
+                    <p>Point Soma at your notes vault or project folders, sync when files change, and retrieve the context behind an idea.</p>
+                </article>
+                <article>
+                    <p class="tag">Scans and recordings</p>
+                    <h3>Search what text search misses</h3>
+                    <p>OCR, vision extraction, and transcription make screenshots, scanned pages, audio, and video searchable alongside text.</p>
+                </article>
+            </div>
+        </div>
+    </section>
 
-<section id="features"><div class="wrap">
-    <div class="kicker">Why Soma</div>
-    <h2>Quietly powerful.</h2>
-    <div class="feat">
-        <div><h3>Hybrid search that just works.</h3><p>One natural-language query expands into keywords, semantic vectors and a hypothetical document — fused and reranked by a local LLM for uncannily good results. No degraded answers.</p></div>
-        <div><h3>Private by design.</h3><p>Everything — indexing, OCR, embeddings, reranking — runs on your machine through a managed local runtime. Offline-friendly, always. Zero telemetry, by construction.</p></div>
-        <div><h3>Sees and hears your files.</h3><p>Vision extraction, OCR and transcription make screenshots, scans, audio and video recordings as searchable as plain text.</p></div>
-        <div><h3>Native on every platform.</h3><p>Native executables for Windows x64, Linux x64 and macOS ARM64. Instant startup, single binary — no installers, no dependencies.</p></div>
-        <div><h3>Speaks your language.</h3><p>Multilingual indexing that tokenizes your material, with careful CJK handling — even one- or two-character queries stay retrievable.</p></div>
-        <div><h3>CLI, server, browser.</h3><p>Use the terminal, run an HTTP service with a built-in web interface, or automate through one clean JSON endpoint that mirrors the CLI.</p></div>
-    </div></div>
-</section>
+    <section id="how" class="band" aria-labelledby="how-title">
+        <div class="wrap">
+            <div class="section-heading">
+                <p class="eyebrow">A simple local workflow</p>
+                <h2 id="how-title">Add a folder. Sync it. Search naturally.</h2>
+            </div>
+            <ol class="steps">
+                <li>
+                    <span class="step-number">01 / ADD</span>
+                    <h3>Choose a project</h3>
+                    <p>Point Soma at a folder and optionally control its file scope.</p>
+                    <code>soma project add ~/notes --name notes</code>
+                </li>
+                <li>
+                    <span class="step-number">02 / SYNC</span>
+                    <h3>Make it searchable</h3>
+                    <p>Scan, extract, and embed the files. The first run may take longer while models download.</p>
+                    <code>soma sync</code>
+                </li>
+                <li>
+                    <span class="step-number">03 / SEARCH</span>
+                    <h3>Ask or match exactly</h3>
+                    <p>Use a natural-language question for semantic search or keywords and phrases for precision.</p>
+                    <code>soma search "how does auth work"</code>
+                </li>
+            </ol>
+        </div>
+    </section>
 
-<section id="get"><div class="wrap">
-    <div class="kicker">Get started</div>
-    <h2>Up and running in a minute.</h2>
-    <pre><span class="c"># Windows</span>
-winget install AwesomeDog.soma
+    <section id="features" aria-labelledby="features-title">
+        <div class="wrap">
+            <div class="section-heading">
+                <p class="eyebrow">Search that meets you where you are</p>
+                <h2 id="features-title">One local index, several ways to find the right file.</h2>
+            </div>
+            <div class="feature-grid">
+                <article>
+                    <h3>Hybrid keyword and semantic search</h3>
+                    <p>One query can combine lexical matching, vector retrieval, query expansion, and reranking for useful results when you remember the idea but not the exact phrase.</p>
+                </article>
+                <article>
+                    <h3>Local processing by default</h3>
+                    <p>Indexing, OCR, embeddings, and reranking run through a managed local runtime. There is no hosted index to upload your documents to.</p>
+                </article>
+                <article>
+                    <h3>Text, images, audio, and video</h3>
+                    <p>Search plain text and rich media together, including content recovered from scans, screenshots, recordings, and video files.</p>
+                </article>
+                <article>
+                    <h3>Native on Windows, macOS, and Linux</h3>
+                    <p>Use native executables for Windows x64, Linux x64, and macOS ARM64. The CLI starts quickly and does not require a separate app stack.</p>
+                </article>
+                <article>
+                    <h3>Multilingual and CJK-aware</h3>
+                    <p>Unicode-aware tokenization keeps short Chinese, Japanese, and other CJK queries retrievable alongside Latin text and code identifiers.</p>
+                </article>
+                <article>
+                    <h3>CLI, browser, and JSON API</h3>
+                    <p>Stay in the terminal, run the built-in local web interface, or automate searches through the HTTP endpoint that mirrors the CLI.</p>
+                </article>
+            </div>
+        </div>
+    </section>
 
-<span class="c"># macOS</span>
-brew tap AwesomeDog/tap &amp;&amp; brew trust AwesomeDog/tap &amp;&amp; brew install AwesomeDog/tap/soma
+    <section id="privacy" class="privacy" aria-labelledby="privacy-title">
+        <div class="wrap">
+            <div class="section-heading">
+                <p class="eyebrow">Private by design</p>
+                <h2 id="privacy-title">Your documents stay in your workspace.</h2>
+                <p>Local-first does not have to be vague. Soma keeps the searchable index and processed content on your machine, while being explicit that the first setup can fetch the models and runtimes it needs.</p>
+            </div>
+            <ul class="privacy-list">
+                <li>Local index and workspace storage</li>
+                <li>No hosted document search service required</li>
+                <li>Offline import is available for prepared artifacts</li>
+            </ul>
+        </div>
+    </section>
 
-<span class="c"># Linux</span>
-curl -fsSL https://github.com/AwesomeDog/soma/releases/latest/download/soma-linux-x64 -o soma &amp;&amp; chmod +x soma &amp;&amp; sudo mv soma /usr/local/bin/
+    <section id="install" class="band" aria-labelledby="install-title">
+        <div class="wrap">
+            <div class="section-heading">
+                <p class="eyebrow">Get started</p>
+                <h2 id="install-title">Install the native binary for your platform.</h2>
+                <p>Choose a package manager or download the current executable from GitHub Releases.</p>
+            </div>
+            <div class="install-grid">
+                <article class="install-card">
+                    <h3>Windows x64</h3>
+                    <pre><code>winget install AwesomeDog.soma</code></pre>
+                    <p>Install from Windows Package Manager, then run Soma from PowerShell or your terminal.</p>
+                    <a href="https://github.com/AwesomeDog/soma/releases" target="_blank" rel="noopener noreferrer">View Windows releases</a>
+                </article>
+                <article class="install-card">
+                    <h3>macOS ARM64</h3>
+                    <pre><code>brew tap AwesomeDog/tap &amp;&amp; brew trust AwesomeDog/tap &amp;&amp; brew install AwesomeDog/tap/soma</code></pre>
+                    <p>Install with Homebrew on Apple Silicon, then add the folders you want to search.</p>
+                    <a href="https://github.com/AwesomeDog/soma/releases" target="_blank" rel="noopener noreferrer">View macOS releases</a>
+                </article>
+                <article class="install-card">
+                    <h3>Linux x64</h3>
+                    <pre><code>curl -fsSL https://github.com/AwesomeDog/soma/releases/latest/download/soma-linux-x64 -o soma
+chmod +x soma &amp;&amp; sudo mv soma /usr/local/bin/</code></pre>
+                    <p>Download the single executable, make it runnable, and start indexing local projects.</p>
+                    <a href="https://github.com/AwesomeDog/soma/releases" target="_blank" rel="noopener noreferrer">View Linux releases</a>
+                </article>
+            </div>
+            <p class="requirements">System requirements: 8 GB RAM for regular use; 24 GB recommended for OCR, vision, and transcription. GPU is optional.</p>
+        </div>
+    </section>
 
-<span class="c"># Then</span>
-soma project add ~/notes --name notes
-soma sync
-soma search "how does auth work"</pre>
-    <p class="fine">Runs on 8 GB RAM · 24 GB recommended for OCR, vision &amp; transcription · GPU optional</p>
-</div></section>
+    <section id="faq" aria-labelledby="faq-title">
+        <div class="wrap">
+            <div class="section-heading">
+                <p class="eyebrow">Before you install</p>
+                <h2 id="faq-title">Questions about local search.</h2>
+            </div>
+            <div class="faq-grid">
+                <article>
+                    <h3>Does Soma upload my files?</h3>
+                    <p>Soma is designed around a local index and local processing. Your documents are not sent to a hosted search index; the first setup may download managed models and runtimes.</p>
+                </article>
+                <article>
+                    <h3>What can I search?</h3>
+                    <p>Search text files and rich media together, including Markdown, PDFs, screenshots, scanned pages, audio, and video when the relevant extraction step is available.</p>
+                </article>
+                <article>
+                    <h3>Can I search by exact words?</h3>
+                    <p>Yes. Hybrid search handles natural-language questions, while lexical search supports keywords, phrases, and exclusions.</p>
+                </article>
+                <article>
+                    <h3>Is Soma only a command-line tool?</h3>
+                    <p>No. The same search engine can run through the CLI, a local browser interface, or a JSON HTTP endpoint for automation.</p>
+                </article>
+            </div>
+        </div>
+    </section>
+</main>
 
-<footer>Soma · A local knowledge-base search engine · Built with GraalVM.</footer>
+<footer class="site-footer">
+    <div class="wrap footer-row">
+        <p>Soma - private local search for documents, notes, and media.</p>
+        <nav class="footer-links" aria-label="Footer navigation">
+            <a href="#how">Quick start</a>
+            <a href="#privacy">Privacy</a>
+            <a href="https://github.com/AwesomeDog/soma" target="_blank" rel="noopener noreferrer">Source</a>
+            <a href="https://github.com/AwesomeDog/soma/releases" target="_blank" rel="noopener noreferrer">Releases</a>
+        </nav>
+    </div>
+</footer>
 </body>
 </html>
