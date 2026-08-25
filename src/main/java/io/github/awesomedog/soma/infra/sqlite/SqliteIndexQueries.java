@@ -69,12 +69,10 @@ final class SqliteIndexQueries {
           GROUP BY d.project_name
       ),
       vector_stats AS (
-          SELECT d.project_name, COUNT(v.rowid) AS vectors
-          FROM documents AS d
-          JOIN requested AS r ON r.project_name = d.project_name
-          JOIN embeddings AS e ON e.document_id = d.id
-          JOIN vectors AS v ON v.rowid = e.id AND v.project_name = d.project_name
-          GROUP BY d.project_name
+          SELECT v.project_name, COUNT(*) AS vectors
+          FROM vectors AS v
+          JOIN requested AS r ON r.project_name = v.project_name
+          GROUP BY v.project_name
       )
       SELECT r.project_name,
              COALESCE(ds.documents, 0) AS documents,
