@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS documents (
     source_mtime_ns INTEGER NOT NULL,
     -- Source size (bytes) for incremental sync and status display.
     source_size_bytes INTEGER NOT NULL,
-    -- text | pdf | image | audio | video | other.
+    -- Application-defined lowercase identifier (for example: text, pdf).
     file_type TEXT NOT NULL DEFAULT 'text',
     -- ready | pending | failed.
     extraction_status TEXT NOT NULL DEFAULT 'ready',
@@ -55,7 +55,8 @@ CREATE TABLE IF NOT EXISTS documents (
     CHECK (source_hash IS NULL OR (length(source_hash) = 64 AND source_hash = lower(source_hash))),
     CHECK (source_mtime_ns >= 0),
     CHECK (source_size_bytes >= 0),
-    CHECK (file_type IN ('text', 'pdf', 'image', 'audio', 'video', 'other')),
+    -- Keep the storage contract open to new file types without changing this schema.
+    CHECK (file_type <> '' AND file_type NOT GLOB '*[^a-z0-9_]*'),
     CHECK (extraction_status IN ('ready', 'pending', 'failed')),
     -- Ready documents have searchable content; pending/failed documents do not.
     CHECK (
@@ -175,12 +176,8 @@ CREATE VIRTUAL TABLE IF NOT EXISTS fts_index USING fts5(
 -- 7. soma_meta
 -- Database metadata. A missing or mismatched database.schema.sha256 makes the
 -- index incompatible and triggers a rebuild from bundled db/schema.sql during
--- write-lock initialization. Active processing recipes are stored under:
---   active.extraction.pdf_recipe_id
---   active.extraction.image_recipe_id
---   active.extraction.media_recipe_id
---   active.lexical_recipe_id
---   active.semantic_recipe_id
+-- write-lock initialization. Active processing recipes are stored under
+-- active.* keys (for example, active.extraction.pdf_recipe_id).
 -- Recipe values are lowercase 64-hex SHA-256 strings validated by the app.
 CREATE TABLE IF NOT EXISTS soma_meta (
     -- PK. Metadata key, e.g. database.schema.sha256.
