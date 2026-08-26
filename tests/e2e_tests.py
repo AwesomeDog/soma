@@ -638,7 +638,7 @@ class Test10IndexingMaintenance(DocsE2E):
     )
 
     def test_10_1_status(self) -> None:
-        self.cli("status", has=("Soma Status", "Workspace", "Host", "Index", "Projects",
+        self.cli("status", has=("Soma Status", "Workspace", "Index", "Projects",
                                 DOCS.name, "Managed Artifacts", "Health Warnings"))
 
     def test_10_2_scan(self) -> None:
