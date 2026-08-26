@@ -37,7 +37,7 @@ import org.eclipse.jgit.ignore.IgnoreNode;
 public final class NioProjectScanner {
 
   private static final Set<String> HARD_SKIPPED_DIRECTORIES =
-      Set.of(".git", ".hg", ".svn", ".soma", "node_modules");
+      Set.of(".git", ".hg", ".svn", ".soma", ".obsidian", "node_modules");
   private static final int TYPE_PREFIX_BYTES = 8192;
   private static final double MAX_TEXT_CONTROL_RATIO = 0.02d;
 
