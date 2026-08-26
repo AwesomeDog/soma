@@ -2,9 +2,9 @@
 -- All tables below live in the selected workspace index database.
 
 -- SQLite base configuration. Apply these pragmas independently to both databases.
-PRAGMA journal_mode = WAL;    -- persistent setting
-PRAGMA foreign_keys = ON;     -- transient setting
-PRAGMA busy_timeout = 5000;   -- transient setting
+-- PRAGMA journal_mode = WAL;    -- persistent setting
+-- PRAGMA foreign_keys = ON;     -- transient setting
+-- PRAGMA busy_timeout = 5000;   -- transient setting
 
 -- 1. contents
 -- Content-addressable document bodies. Identical bodies share one row.
@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS documents (
     source_size_bytes INTEGER NOT NULL,
     -- Application-defined lowercase identifier (for example: text, pdf).
     file_type TEXT NOT NULL DEFAULT 'text',
-    -- ready | pending | failed.
+    -- Application-defined lowercase workflow status identifier.
     extraction_status TEXT NOT NULL DEFAULT 'ready',
     -- Time of most recent index update for this path.
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -57,7 +57,7 @@ CREATE TABLE IF NOT EXISTS documents (
     CHECK (source_size_bytes >= 0),
     -- Keep the storage contract open to new file types without changing this schema.
     CHECK (file_type <> '' AND file_type NOT GLOB '*[^a-z0-9_]*'),
-    CHECK (extraction_status IN ('ready', 'pending', 'failed')),
+    CHECK (extraction_status <> '' AND extraction_status NOT GLOB '*[^a-z0-9_]*'),
     -- Ready documents have searchable content; pending/failed documents do not.
     CHECK (
         (extraction_status = 'ready'
@@ -193,7 +193,7 @@ CREATE TABLE IF NOT EXISTS soma_meta (
 -- Sync triggers and index maintenance.
 
 -- FTS Lifecycle Triggers.
--- fts_index is never auto-populated. Scan code writes projected rows after
+-- fts_index is never autopopulated. Scan code writes projected rows after
 -- applying lexical projection rules; triggers only remove stale rows so
 -- deleted/changed/non-ready documents stop being searchable before the next
 -- projected write.
