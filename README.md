@@ -6,7 +6,7 @@
 
 Soma is a local knowledge-base search engine that understands your materials.
 
-It scans multimedia files from configured projects, stores them in a local database, and uses a local AI to build a
+It scans documents and multimedia files from configured projects, stores them in a local database, and uses a local AI to build a
 "semantic fingerprint" of each file — essentially the AI's understanding of what's inside. This lets you search in
 natural language or by exact keywords. Everything is accessible through CLI and HTTP service with a built-in web
 interface.
@@ -106,9 +106,9 @@ Soma bundles [sqlite-vec](https://github.com/asg017/sqlite-vec), Copyright (c) 2
 Soma downloads and invokes several external command-line tools locally. We are grateful to the maintainers of
 [pdfium-helper's `opencc-rs` CLI](https://github.com/laisuk/pdfium-helper),
 [FFmpeg](https://ffmpeg.org/) and [Jellyfin FFmpeg](https://github.com/jellyfin/jellyfin-ffmpeg),
-[llamafile's `whisperfile`](https://github.com/mozilla-ai/llamafile),
+[Pandoc](https://pandoc.org/), [llamafile's `whisperfile`](https://github.com/mozilla-ai/llamafile),
 [RapidOCR-CLI](https://github.com/AwesomeDog/RapidOCR-CLI), and
-[llama.cpp](https://github.com/ggml-org/llama.cpp) for powering PDF extraction, media processing, transcription, OCR,
+[llama.cpp](https://github.com/ggml-org/llama.cpp) for powering PDF extraction, Office/EPUB conversion, media processing, transcription, OCR,
 and local model inference.
 
 The local search pipeline also relies on model releases and quantizations from

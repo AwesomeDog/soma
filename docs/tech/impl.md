@@ -84,7 +84,7 @@ src/main/java/<base-package>
 ├── infra
 │   ├── config                  # YAML I/O, XDG paths, re-read per command, atomic writes
 │   ├── sqlite                  # schema init, JDBC repositories, FTS5, sqlite-vec
-│   ├── extraction              # text/PDF/OCR/vision/transcription
+│   ├── extraction              # text/PDF/Office/EPUB/OCR/vision/transcription
 │   ├── embedding               # generation and vector serialization
 │   ├── llm                     # HyDE, query expansion, reranking clients
 │   ├── locking                 # FileWriteLock; implements app/ports/WriteLock (Path value in)
@@ -367,7 +367,7 @@ status. No state file, marker, ETag, lock, database, or migration.
 - Globs root-relative (`**/*.md` matches root files).
 - `project add/update/remove/rename`: write config, then run the incremental scan path.
 - No dir-symlink follow; file-symlink keeps path, indexes content.
-- Empty text valid; rich → `pending`; unsupported binary → `failed`.
+- Empty text valid; rich → `pending`; unsupported binary → `failed`. Office and EPUB rich bodies are currently converted to Markdown by a managed external converter.
 - Incremental `sync`: matching mtime and size skip content reads and hashing; inspect and hash new or metadata-changed
   files.
 - Scanning is one concrete system collaborator, not a one-implementation port. It returns read files plus

@@ -589,7 +589,7 @@ soma system scan
 
 #### `soma system extract`
 
-Run content extraction: PDF text extraction, OCR, vision LLM extraction, transcription. Options: none.
+Run content extraction: PDF text extraction, Office/EPUB-to-Markdown conversion, OCR, vision LLM extraction, and transcription. Options: none.
 
 ```bash
 soma system extract
@@ -755,9 +755,9 @@ Optional background for ambiguous queries (`performance`, `cache`, `security`, `
 
 ### Indexing & Maintenance
 
-- **Sync** — Full maintenance: pull artifacts, scan projects, extract media text, embed chunks, clean derived state.
+- **Sync** — Full maintenance: pull artifacts, scan projects, extract rich/media text, embed chunks, clean derived state.
 - **Scan** — Inspect project files and refresh the workspace index.
-- **Extract** — Deriving searchable text from rich/media files via OCR, vision extraction, or transcription.
+- **Extract** — Deriving searchable text from rich/media files via conversion, OCR, vision extraction, or transcription.
 - **Embedding** — Numeric text representation used for semantic search.
 - **Vector index** — Index storage for embeddings.
 - **Pull** — Downloading or refreshing managed artifacts.

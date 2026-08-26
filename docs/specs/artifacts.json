@@ -35,6 +35,39 @@
       "executable": true
     },
     {
+      "id": "pandoc",
+      "version": "3.10.1",
+      "platform": "darwin-arm64",
+      "url": "https://github.com/jgm/pandoc/releases/download/3.10.1/pandoc-3.10.1-arm64-macOS.zip",
+      "sha256": "8607160694a70ed9aa63776caa44acef3afb729c379c7c283724b7e27455bfda",
+      "format": "zip",
+      "stripComponents": 1,
+      "entry": "bin/pandoc",
+      "executable": true
+    },
+    {
+      "id": "pandoc",
+      "version": "3.10.1",
+      "platform": "linux-x86_64",
+      "url": "https://github.com/jgm/pandoc/releases/download/3.10.1/pandoc-3.10.1-linux-amd64.tar.gz",
+      "sha256": "72948bf5784f560d5ad1876709daca27e0667f262da727bb33f77b58e52df2f5",
+      "format": "tar.gz",
+      "stripComponents": 1,
+      "entry": "bin/pandoc",
+      "executable": true
+    },
+    {
+      "id": "pandoc",
+      "version": "3.10.1",
+      "platform": "windows-x86_64",
+      "url": "https://github.com/jgm/pandoc/releases/download/3.10.1/pandoc-3.10.1-windows-x86_64.zip",
+      "sha256": "4725a1883e2171c2e181e6fd45003acb59ca4e9cbe031fdd3b79ef0d697d36aa",
+      "format": "zip",
+      "stripComponents": 1,
+      "entry": "pandoc.exe",
+      "executable": true
+    },
+    {
       "id": "whisper",
       "version": "0.10.1",
       "platform": "all",

@@ -355,6 +355,7 @@ class SystemMaintenanceIntegrationTest {
       var domain =
           switch (fileType) {
             case PDF -> "test.pdf";
+            case OFFICE, EPUB -> "test.document";
             case IMAGE -> "test.image";
             case AUDIO, VIDEO -> "test.media";
             case TEXT, OTHER -> throw new IllegalArgumentException("unsupported test recipe");

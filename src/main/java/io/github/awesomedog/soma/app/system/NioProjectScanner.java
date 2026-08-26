@@ -27,6 +27,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -176,7 +177,7 @@ public final class NioProjectScanner {
       return file(documentPath, FileType.OTHER, sizeBytes, modifiedTimeNs, null, null);
     }
 
-    var type = detectFileType(prefix, prefix.length >= sizeBytes);
+    var type = detectFileType(prefix, prefix.length >= sizeBytes, documentPath);
     if (type == FileType.OTHER) {
       return file(documentPath, type, sizeBytes, modifiedTimeNs, null, null);
     }
@@ -210,13 +211,17 @@ public final class NioProjectScanner {
     return new ReadFile(documentPath, type, sizeBytes, modifiedTimeNs, sourceHash, decodedText);
   }
 
-  private static FileType detectFileType(byte[] prefix, boolean complete) {
-    if (prefix.length == 0) {
-      return FileType.TEXT;
-    }
+  private static FileType detectFileType(byte[] prefix, boolean complete, String documentPath) {
     var magic = FileSignatures.detect(prefix);
     if (magic != FileType.OTHER) {
       return magic;
+    }
+    var extensionType = documentTypeFromExtension(documentPath);
+    if (extensionType != null) {
+      return extensionType;
+    }
+    if (prefix.length == 0) {
+      return FileType.TEXT;
     }
     try {
       return hasAcceptableControlRatio(decodeUtf8(prefix, complete))
@@ -225,6 +230,19 @@ public final class NioProjectScanner {
     } catch (CharacterCodingException e) {
       return FileType.OTHER;
     }
+  }
+
+  private static FileType documentTypeFromExtension(String documentPath) {
+    var dot = documentPath.lastIndexOf('.');
+    var separator = documentPath.lastIndexOf('/');
+    if (dot <= separator || dot == documentPath.length() - 1) {
+      return null;
+    }
+    return switch (documentPath.substring(dot + 1).toLowerCase(Locale.ROOT)) {
+      case "docx", "docm", "xlsx", "xlsm", "pptx", "pptm" -> FileType.OFFICE;
+      case "epub" -> FileType.EPUB;
+      default -> null;
+    };
   }
 
   private static String decodeUtf8(byte[] bytes, boolean complete) throws CharacterCodingException {

@@ -186,7 +186,14 @@ public final class ContentExtraction {
 
   private EnumMap<FileType, String> desiredRecipeIds() {
     var desiredRecipeIds = new EnumMap<FileType, String>(FileType.class);
-    for (var type : List.of(FileType.PDF, FileType.IMAGE, FileType.AUDIO, FileType.VIDEO)) {
+    for (var type :
+        List.of(
+            FileType.PDF,
+            FileType.OFFICE,
+            FileType.EPUB,
+            FileType.IMAGE,
+            FileType.AUDIO,
+            FileType.VIDEO)) {
       desiredRecipeIds.put(type, extractor.recipeId(type));
     }
     return desiredRecipeIds;

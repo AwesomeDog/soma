@@ -5,6 +5,8 @@ import java.util.Locale;
 public enum FileType {
   TEXT,
   PDF,
+  OFFICE,
+  EPUB,
   IMAGE,
   AUDIO,
   VIDEO,

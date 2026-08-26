@@ -29,6 +29,8 @@ import java.util.function.Consumer;
 final class SqliteDocumentStore {
 
   private static final String PDF_RECIPE_KEY = "active.extraction.pdf_recipe_id";
+  private static final String OFFICE_RECIPE_KEY = "active.extraction.office_recipe_id";
+  private static final String EPUB_RECIPE_KEY = "active.extraction.epub_recipe_id";
   private static final String IMAGE_RECIPE_KEY = "active.extraction.image_recipe_id";
   private static final String MEDIA_RECIPE_KEY = "active.extraction.media_recipe_id";
   private static final String LEXICAL_RECIPE_KEY = "active.lexical_recipe_id";
@@ -128,7 +130,7 @@ final class SqliteDocumentStore {
           AND source_hash IS ?
           AND title = ?
           AND file_type = ?
-          AND ((? = 'pending' AND file_type IN ('pdf', 'image', 'audio', 'video'))
+          AND ((? = 'pending' AND file_type IN ('pdf', 'office', 'epub', 'image', 'audio', 'video'))
                OR (content_hash IS ? AND extraction_status = ?))
         """;
     try (var statement = connection.prepareStatement(sql)) {
@@ -161,6 +163,9 @@ final class SqliteDocumentStore {
   void invalidateExtractionForRecipeChanges(Map<FileType, String> desiredRecipeIds) {
     Objects.requireNonNull(desiredRecipeIds, "desiredRecipeIds");
     var pdfRecipeId = Objects.requireNonNull(desiredRecipeIds.get(FileType.PDF), "PDF recipe");
+    var officeRecipeId =
+        Objects.requireNonNull(desiredRecipeIds.get(FileType.OFFICE), "Office recipe");
+    var epubRecipeId = Objects.requireNonNull(desiredRecipeIds.get(FileType.EPUB), "EPUB recipe");
     var imageRecipeId =
         Objects.requireNonNull(desiredRecipeIds.get(FileType.IMAGE), "image recipe");
     var audioRecipeId =
@@ -172,6 +177,9 @@ final class SqliteDocumentStore {
     }
     try {
       invalidateExtractionForRecipeChange(PDF_RECIPE_KEY, pdfRecipeId, List.of(FileType.PDF));
+      invalidateExtractionForRecipeChange(
+          OFFICE_RECIPE_KEY, officeRecipeId, List.of(FileType.OFFICE));
+      invalidateExtractionForRecipeChange(EPUB_RECIPE_KEY, epubRecipeId, List.of(FileType.EPUB));
       invalidateExtractionForRecipeChange(IMAGE_RECIPE_KEY, imageRecipeId, List.of(FileType.IMAGE));
       invalidateExtractionForRecipeChange(
           MEDIA_RECIPE_KEY, audioRecipeId, List.of(FileType.AUDIO, FileType.VIDEO));
@@ -188,7 +196,7 @@ final class SqliteDocumentStore {
         """
         SELECT id, project_name, path, file_type, source_hash
         FROM documents
-        WHERE file_type IN ('pdf', 'image', 'audio', 'video')
+        WHERE file_type IN ('pdf', 'office', 'epub', 'image', 'audio', 'video')
           AND extraction_status = 'pending'
           AND source_hash IS NOT NULL
         ORDER BY project_name, path

@@ -37,6 +37,8 @@ class SqliteWorkspaceIndexTest {
   private static final String PDF_V1 = recipe("pdf-v1");
   private static final String PDF_V2 = recipe("pdf-v2");
   private static final String PDF_V3 = recipe("pdf-v3");
+  private static final String OFFICE_V1 = recipe("office-v1");
+  private static final String EPUB_V1 = recipe("epub-v1");
   private static final String IMAGE_V1 = recipe("image-v1");
   private static final String MEDIA_V1 = recipe("media-v1");
   private static final String SEMANTIC_V1 = recipe("semantic-v1");
@@ -555,6 +557,8 @@ class SqliteWorkspaceIndexTest {
     index.invalidateExtractionForRecipeChanges(
         Map.of(
             FileType.PDF, pdfRecipeId,
+            FileType.OFFICE, OFFICE_V1,
+            FileType.EPUB, EPUB_V1,
             FileType.IMAGE, IMAGE_V1,
             FileType.AUDIO, MEDIA_V1,
             FileType.VIDEO, MEDIA_V1));

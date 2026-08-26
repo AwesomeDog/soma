@@ -170,7 +170,7 @@ public final class EmbeddingGeneration {
     var failures = failedChunkCount == 0 ? "" : "; skipped " + failedChunkCount + " failed chunks";
     return new OperationReport(
         "embed",
-        "Done! Embedded "
+        "Embedded "
             + completedWork.size()
             + " chunks from "
             + documentCount

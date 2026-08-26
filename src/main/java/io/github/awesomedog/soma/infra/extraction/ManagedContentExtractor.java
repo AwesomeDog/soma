@@ -54,6 +54,11 @@ public final class ManagedContentExtractor implements ContentExtractor {
   private static final String PDF_CACHE_OPERATION = "pdf.text";
   private static final List<String> PDF_ARTIFACTS = List.of("pdfium");
 
+  private static final String OFFICE_CACHE_OPERATION = "office.markdown";
+  private static final String EPUB_CACHE_OPERATION = "epub.markdown";
+  private static final String PANDOC_ARTIFACT = "pandoc";
+  private static final List<String> PANDOC_ARTIFACTS = List.of(PANDOC_ARTIFACT);
+
   private static final int MAX_OCR_CLEANUP_INPUT_CHARS = 8_000;
   private static final int MAX_OCR_CLEANUP_OUTPUT_TOKENS = 2_048;
   private static final int MIN_CLEANED_OCR_CHARS = 1;
@@ -154,6 +159,8 @@ public final class ManagedContentExtractor implements ContentExtractor {
   public String recipeId(FileType fileType) {
     return switch (Objects.requireNonNull(fileType, "fileType")) {
       case PDF -> pdfRecipeId();
+      case OFFICE -> officeRecipeId();
+      case EPUB -> epubRecipeId();
       case IMAGE -> imageRecipeId();
       case AUDIO, VIDEO -> mediaRecipeId(fileType);
       case TEXT, OTHER ->
@@ -167,6 +174,8 @@ public final class ManagedContentExtractor implements ContentExtractor {
     var input = requireReadableSourceFile(source);
     return switch (Objects.requireNonNull(fileType, "fileType")) {
       case PDF -> extractPdf(input);
+      case OFFICE -> extractOffice(input);
+      case EPUB -> extractEpub(input);
       case IMAGE -> extractImage(input);
       case AUDIO, VIDEO -> transcribeMedia(input, fileType);
       case TEXT, OTHER ->
@@ -214,6 +223,88 @@ public final class ManagedContentExtractor implements ContentExtractor {
     } finally {
       deleteTemporaryFileQuietly(output);
     }
+  }
+
+  private String officeRecipeId() {
+    return RecipeId.of(
+        "office.markdown",
+        "v1",
+        "command=pandoc --from=<format> --to=markdown --output=- <source>",
+        "formats=docx,docm->docx;xlsx,xlsm->xlsx;pptx,pptm->pptx",
+        "output=utf8-strip-nonempty",
+        artifactRecipeId(PANDOC_ARTIFACTS));
+  }
+
+  private String epubRecipeId() {
+    return RecipeId.of(
+        "epub.markdown",
+        "v1",
+        "command=pandoc --from=epub --to=markdown --output=- <source>",
+        "output=utf8-strip-nonempty",
+        artifactRecipeId(PANDOC_ARTIFACTS));
+  }
+
+  private Extraction extractOffice(Path source) {
+    return extractWithPandoc(source, FileType.OFFICE, OFFICE_CACHE_OPERATION, officeRecipeId());
+  }
+
+  private Extraction extractEpub(Path source) {
+    return extractWithPandoc(source, FileType.EPUB, EPUB_CACHE_OPERATION, epubRecipeId());
+  }
+
+  private Extraction extractWithPandoc(
+      Path source, FileType fileType, String cacheOperation, String recipeId) {
+    var inputFormat = pandocInputFormat(source, fileType);
+    var sourceHash = calculateSourceHash(source);
+    var cached = readNonBlankCache(cacheOperation, recipeId, sourceHash);
+    if (cached.isPresent()) {
+      return new Extraction(sourceHash, cached.get());
+    }
+    var pandoc = requireArtifact(PANDOC_ARTIFACT);
+    var body =
+        executeCommand(
+                List.of(
+                    pandoc.toString(),
+                    "--from=" + inputFormat,
+                    "--to=markdown",
+                    "--output=-",
+                    source.toString()),
+                source.getParent())
+            .strip();
+    requireNonBlankBody(body, "Pandoc conversion produced no searchable text: " + source);
+    cache.write(cacheOperation, recipeId, sourceHash, body);
+    return new Extraction(sourceHash, body);
+  }
+
+  private String pandocInputFormat(Path source, FileType fileType) {
+    var fileName = source.getFileName().toString().toLowerCase(Locale.ROOT);
+    var dot = fileName.lastIndexOf('.');
+    var extension = dot < 0 ? "" : fileName.substring(dot + 1);
+    return switch (fileType) {
+      case OFFICE ->
+          switch (extension) {
+            case "docx", "docm" -> "docx";
+            case "xlsx", "xlsm" -> "xlsx";
+            case "pptx", "pptm" -> "pptx";
+            default -> throw unsupportedPandocExtension(source, fileType);
+          };
+      case EPUB -> {
+        if (!"epub".equals(extension)) {
+          throw unsupportedPandocExtension(source, fileType);
+        }
+        yield "epub";
+      }
+      default ->
+          throw new IllegalArgumentException(
+              "File type does not have a Pandoc input format: " + fileType.value());
+    };
+  }
+
+  private AppException unsupportedPandocExtension(Path source, FileType fileType) {
+    return new AppException(
+        OPERATION_FAILED,
+        "Unsupported " + fileType.value() + " document extension: " + source,
+        null);
   }
 
   private String imageRecipeId() {

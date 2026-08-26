@@ -63,6 +63,8 @@ INSERT INTO fts_index(rowid, title, body) VALUES (?, ?, ?);
 | Key | Materialized output governed by the recipe |
 |---|---|
 | `active.extraction.pdf_recipe_id` | Searchable bodies of PDF documents |
+| `active.extraction.office_recipe_id` | Searchable Markdown bodies converted from Office documents |
+| `active.extraction.epub_recipe_id` | Searchable Markdown bodies converted from EPUB documents |
 | `active.extraction.image_recipe_id` | Searchable bodies assembled from image description and OCR |
 | `active.extraction.media_recipe_id` | Searchable transcripts of audio and video documents |
 | `active.lexical_recipe_id` | Rows in `fts_index` |
@@ -85,6 +87,8 @@ Chunking, document-input formatting, tokenizer, and embedding-model identity for
 Extraction recipes are global per independently invalidated final pipeline, not per document:
 
 - PDF recipe change → set every ready or failed PDF document with a non-null `source_hash` to `pending` and clear its `content_hash`.
+- Office recipe change → set every ready or failed Office document with a non-null `source_hash` to `pending` and clear its `content_hash`.
+- EPUB recipe change → set every ready or failed EPUB document with a non-null `source_hash` to `pending` and clear its `content_hash`.
 - Image recipe change → set every ready or failed image document with a non-null `source_hash` to `pending` and clear its `content_hash`.
 - Media recipe change → set every ready or failed audio/video document with a non-null `source_hash` to `pending` and clear its `content_hash`.
 - Publish the new global recipe only after all affected documents have been invalidated; then process pending documents incrementally.
@@ -106,7 +110,7 @@ Keep FTS, chunks, embeddings, and vectors aligned with the active recipes:
 - `documents.source_hash` is the lowercase SHA-256 of the original file bytes. It is null only when the source cannot be read or its type is unsupported.
 - `source_hash` and `content_hash` are distinct for rich/media documents: the former identifies the source file, while the latter identifies extracted searchable text.
 - Ordinary sync treats matching mtime and size as unchanged without recomputing `source_hash`; content changes that preserve both values require a full scan to discover.
-- After inspecting a rich/media source, reuse its existing body only when the scanned and stored `source_hash` values are both non-null and equal and the relevant workspace extraction recipe is current.
+- After inspecting a rich/media source, reuse its existing body only when the scanned and stored `source_hash` values are both non-null and equal and the relevant workspace extraction recipe is current. Office and EPUB bodies are Markdown produced by the current managed converter.
 - A matching `source_hash` with changed mtime or size updates only source metadata. A changed or missing `source_hash` makes the previous extraction stale and returns the document to processing.
 - A failed rich/media document with the same non-null `source_hash` stays failed during an ordinary scan. A source or relevant extraction-recipe change makes it pending again.
 

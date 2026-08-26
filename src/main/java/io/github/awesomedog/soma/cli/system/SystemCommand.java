@@ -112,7 +112,10 @@ public final class SystemCommand extends SubcommandRequiredCommand {
                 workspace.configFile(), workspace.dbFile(), token, progress(invocation)));
   }
 
-  @Command(name = "extract", description = "Run OCR, vision extraction, and transcription.")
+  @Command(
+      name = "extract",
+      description =
+          "Run PDF extraction, Office/EPUB-to-Markdown conversion, OCR, vision extraction, and transcription.")
   public int extract() {
     return locked(
         invocation -> artifactProvisioning.pull(false, progress(invocation)),
