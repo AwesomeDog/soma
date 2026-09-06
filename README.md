@@ -12,9 +12,9 @@
 <p align="center">
   <a href="https://github.com/AwesomeDog/soma/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/AwesomeDog/soma?style=flat-square"></a>
   <a href="https://github.com/AwesomeDog/soma/releases"><img alt="Downloads" src="https://img.shields.io/github/downloads/AwesomeDog/soma/total?style=flat-square"></a>
-  <img alt="Platforms" src="https://img.shields.io/badge/platform-Windows%20x64%20%7C%20macOS%20ARM64%20%7C%20Linux%20x64-blue?style=flat-square">
+  <img alt="Platforms" src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue">
   <img alt="Offline" src="https://img.shields.io/badge/cloud-not%20required-success?style=flat-square">
-  <a href="https://github.com/AwesomeDog/soma/stargazers"><img alt="Stars" src="https://img.shields.io/github/stars/AwesomeDog/soma?style=flat-square"></a>
+  <a href="https://github.com/AwesomeDog/soma/stargazers"><img alt="Stars" src="https://img.shields.io/github/stars/AwesomeDog/soma?style=social"></a>
 </p>
 
 ---
