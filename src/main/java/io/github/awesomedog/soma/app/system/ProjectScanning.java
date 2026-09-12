@@ -155,7 +155,9 @@ public final class ProjectScanning {
     var status =
         decodedText != null
             ? ExtractionStatus.READY
-            : file.sourceHash() != null ? ExtractionStatus.PENDING : ExtractionStatus.FAILED;
+            : file.failed()
+                ? ExtractionStatus.FAILED
+                : file.sourceHash() != null ? ExtractionStatus.PENDING : ExtractionStatus.FAILED;
     var contentHash = decodedText == null ? null : Hashing.sha256HexUtf8(decodedText);
     return new WorkspaceIndex.DocumentWrite(
         project,

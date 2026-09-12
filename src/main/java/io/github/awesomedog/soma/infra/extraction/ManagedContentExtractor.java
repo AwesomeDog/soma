@@ -65,6 +65,7 @@ public final class ManagedContentExtractor implements ContentExtractor {
   private static final int MIN_CLEANED_OCR_LENGTH_DIVISOR = 4;
   private static final int MAX_CLEANED_OCR_LENGTH_MULTIPLIER = 3;
   private static final int MAX_CLEANED_OCR_EXTRA_CHARS = 200;
+  static final int MAX_IMAGE_SOURCE_BYTES = 32 * 1024 * 1024;
   private static final int MAX_DIRECT_VISION_IMAGE_BYTES = 10 * 1024 * 1024;
   private static final String VISION_IMAGE_SCALE_FILTER =
       "scale='min(2048,iw)':'min(2048,ih)':"
@@ -318,7 +319,7 @@ public final class ManagedContentExtractor implements ContentExtractor {
   }
 
   private Extraction extractImage(Path source) {
-    var bytes = readSourceBytes(source);
+    var bytes = readImageSourceBytes(source);
     var sourceHash = Hashing.sha256Hex(bytes);
     var vision = describeImage(source, bytes, sourceHash);
     var ocr = readAndCleanOcr(bytes, sourceHash);
@@ -704,6 +705,22 @@ public final class ManagedContentExtractor implements ContentExtractor {
   private byte[] readSourceBytes(Path sourceFile) {
     try {
       return Files.readAllBytes(sourceFile);
+    } catch (IOException e) {
+      throw new AppException(
+          OPERATION_FAILED, "Could not read source file: " + sourceFile, null, e);
+    }
+  }
+
+  private byte[] readImageSourceBytes(Path sourceFile) {
+    try (var input = Files.newInputStream(sourceFile)) {
+      var bytes = input.readNBytes(MAX_IMAGE_SOURCE_BYTES + 1);
+      if (bytes.length > MAX_IMAGE_SOURCE_BYTES) {
+        throw operationFailed(
+            "Image source exceeds the maximum size of " + MAX_IMAGE_SOURCE_BYTES + " bytes.");
+      }
+      return bytes;
+    } catch (AppException e) {
+      throw e;
     } catch (IOException e) {
       throw new AppException(
           OPERATION_FAILED, "Could not read source file: " + sourceFile, null, e);

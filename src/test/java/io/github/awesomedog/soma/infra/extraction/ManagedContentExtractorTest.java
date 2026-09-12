@@ -203,6 +203,30 @@ class ManagedContentExtractorTest {
     }
   }
 
+  @Test
+  void rejectsImagesOverTheSourceSizeLimitBeforeCallingRuntimes() throws Exception {
+    var source = temporaryDirectory.resolve("too-large.png");
+    var pngSignature = new byte[] {(byte) 0x89, 'P', 'N', 'G', 0x0d, 0x0a, 0x1a, 0x0a};
+    var chunk = new byte[8192];
+    try (var output = Files.newOutputStream(source)) {
+      output.write(pngSignature);
+      for (var written = 0; written < ManagedContentExtractor.MAX_IMAGE_SOURCE_BYTES; ) {
+        var length =
+            Math.min(chunk.length, ManagedContentExtractor.MAX_IMAGE_SOURCE_BYTES - written);
+        output.write(chunk, 0, length);
+        written += length;
+      }
+    }
+    var extractor = extractor(id -> temporaryDirectory.resolve(id), unusedCommands());
+
+    assertThatThrownBy(() -> extractor.extract(source, FileType.IMAGE))
+        .isInstanceOfSatisfying(
+            AppException.class,
+            failure ->
+                assertThat(failure.error().message())
+                    .contains("Image source exceeds the maximum size of 33554432 bytes."));
+  }
+
   private ManagedContentExtractor imageExtractor(HttpServer server, List<String> runtimes) {
     return imageExtractor(
         server,

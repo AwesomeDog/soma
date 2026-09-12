@@ -146,6 +146,25 @@ class NioProjectScannerTest {
   }
 
   @Test
+  void rejectsOversizedTextWithoutRetainingItsBody() throws Exception {
+    var root = Files.createDirectories(temporaryDirectory.resolve("docs"));
+    var source = root.resolve("large.txt");
+    var bytes = new byte[Math.toIntExact(NioProjectScanner.MAX_TEXT_SOURCE_BYTES + 1)];
+    java.util.Arrays.fill(bytes, (byte) 'a');
+    Files.write(source, bytes);
+
+    assertThat(scan(new NioProjectScanner(), project(root, List.of("**/*"), List.of(), false)))
+        .singleElement()
+        .satisfies(
+            scanned -> {
+              assertThat(scanned.fileType()).isEqualTo(FileType.TEXT);
+              assertThat(scanned.decodedText()).isNull();
+              assertThat(scanned.failed()).isTrue();
+              assertThat(scanned.sourceHash()).isEqualTo(Hashing.sha256Hex(source));
+            });
+  }
+
+  @Test
   void rejectsUnreadableOrMissingRootWithStructuredInvalidRequest() throws IOException {
     var missing = temporaryDirectory.resolve("missing").toAbsolutePath();
 

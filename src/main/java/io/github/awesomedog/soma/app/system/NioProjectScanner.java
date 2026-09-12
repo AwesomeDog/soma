@@ -39,6 +39,7 @@ public final class NioProjectScanner {
   private static final Set<String> HARD_SKIPPED_DIRECTORIES =
       Set.of(".git", ".hg", ".svn", ".soma", ".obsidian", "node_modules");
   private static final int TYPE_PREFIX_BYTES = 8192;
+  static final long MAX_TEXT_SOURCE_BYTES = 8L * 1024 * 1024;
   private static final double MAX_TEXT_CONTROL_RATIO = 0.02d;
 
   public ScanResult scan(
@@ -191,6 +192,12 @@ public final class NioProjectScanner {
     }
 
     try {
+      if (sizeBytes > MAX_TEXT_SOURCE_BYTES) {
+        var sourceHash = hashOversizedText(source, documentPath, warnings);
+        warnings.accept(
+            "Skipped " + documentPath + ": text file exceeds " + MAX_TEXT_SOURCE_BYTES + " bytes.");
+        return file(documentPath, type, sizeBytes, modifiedTimeNs, sourceHash, null, true);
+      }
       var decodedText = Files.readString(source, StandardCharsets.UTF_8);
       return hasAcceptableControlRatio(decodedText)
           ? file(documentPath, type, sizeBytes, modifiedTimeNs, null, decodedText)
@@ -201,6 +208,16 @@ public final class NioProjectScanner {
     }
   }
 
+  private static String hashOversizedText(
+      Path source, String documentPath, Consumer<String> warnings) {
+    try {
+      return Hashing.sha256Hex(source);
+    } catch (IOException | SecurityException e) {
+      warnings.accept("Could not hash " + documentPath + ": " + e.getMessage());
+      return null;
+    }
+  }
+
   private static ReadFile file(
       String documentPath,
       FileType type,
@@ -208,7 +225,19 @@ public final class NioProjectScanner {
       long modifiedTimeNs,
       String sourceHash,
       String decodedText) {
-    return new ReadFile(documentPath, type, sizeBytes, modifiedTimeNs, sourceHash, decodedText);
+    return file(documentPath, type, sizeBytes, modifiedTimeNs, sourceHash, decodedText, false);
+  }
+
+  private static ReadFile file(
+      String documentPath,
+      FileType type,
+      long sizeBytes,
+      long modifiedTimeNs,
+      String sourceHash,
+      String decodedText,
+      boolean failed) {
+    return new ReadFile(
+        documentPath, type, sizeBytes, modifiedTimeNs, sourceHash, decodedText, failed);
   }
 
   private static FileType detectFileType(byte[] prefix, boolean complete, String documentPath) {
@@ -343,7 +372,8 @@ public final class NioProjectScanner {
       long sizeBytes,
       long modifiedTimeNs,
       String sourceHash,
-      String decodedText) {}
+      String decodedText,
+      boolean failed) {}
 
   private record IgnoreFrame(Path directory, IgnoreNode rules) {}
 
