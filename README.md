@@ -36,6 +36,11 @@ soma sync                    # 2. index + extract + embed (fully local)
 soma search "how does auth work"   # 3. ask in plain language
 ```
 
+<p align="center">
+  <img src="docs/img/web-ui-light.svg#gh-light-mode-only" width="820" alt="Soma web UI — hybrid search results">
+  <img src="docs/img/web-ui-dark.svg#gh-dark-mode-only" width="820" alt="Soma web UI — hybrid search results">
+</p>
+
 ## Table of Contents
 
 - [Why Soma](#why-soma)
