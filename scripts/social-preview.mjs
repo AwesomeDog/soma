@@ -38,31 +38,35 @@ const MARK = { size: 92, gap: 24 };
 const COPY = {
   title: "Soma",
   lines: [
-    "Local-first semantic search for your documents,",
-    "PDFs, images, audio and video — 100% offline.",
+    "Search your files by meaning or exact keywords.",
+    "PDFs, Office, EPUB, images, audio and video.",
   ],
-  chips: ["NO CLOUD", "NO API KEYS", "ONE BINARY"],
+  chips: ["ONE BINARY", "LOCAL MODELS", "CLI · WEB UI · API"],
+  url: "github.com/AwesomeDog/soma",
 };
 
-// Terminal lines: segments drawn left-to-right, plus an optional right-aligned score.
+// Terminal lines: segments drawn left-to-right, plus an optional right-aligned
+// tail. Content mirrors the illustrative output in README's Quick Start.
+const NBSP = " ";
 const TERM = [
   [{ t: "$ ", f: C.accentSoft }, { t: "soma project add ~/notes", f: C.termText }],
   [{ t: "$ ", f: C.accentSoft }, { t: "soma sync", f: C.termText }],
-  [{ t: "$ ", f: C.accentSoft }, { t: 'soma search "how does auth work"', f: C.termText }],
+  [{ t: "$ ", f: C.accentSoft }, { t: 'soma search "how does auth work" --limit 3', f: C.termText }],
   [],
   [
-    { t: "1  ", f: C.termDim },
-    { t: "docs/auth/rate-limiter.md", f: C.termText },
+    { t: "1.  ", f: C.termDim },
+    { t: "soma://notes/api/authentication.md", f: C.termText },
     { score: "0.91" },
   ],
+  [{ t: `${NBSP}${NBSP}${NBSP}${NBSP}`, f: C.termDim }, { t: "Requests are authenticated at the gateway…", f: C.termDim }],
   [
-    { t: "2  ", f: C.termDim },
-    { t: "notes/sso-notes.md", f: C.termText },
+    { t: "2.  ", f: C.termDim },
+    { t: "soma://notes/runbooks/login.md", f: C.termText },
     { score: "0.84" },
   ],
   [
-    { t: "3  ", f: C.termDim },
-    { t: "slides/auth-flow.pdf", f: C.termText },
+    { t: "3.  ", f: C.termDim },
+    { t: "soma://notes/api/rate-limiter.md", f: C.termText },
     { score: "0.79" },
   ],
 ];
@@ -75,14 +79,28 @@ const esc = (s) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 // --- text block -------------------------------------------------------------
-const markX = PAD;
-const markY = 148;
-const titleX = markX + MARK.size + MARK.gap;
-const titleBaseline = markY + MARK.size / 2 + 26;
+// Left column is flush with the card: same top edge, same bottom edge, and the
+// gaps between the four groups (mark+title / tagline / chips / url) are equal.
+const LEFT_TOP = CARD.y;
+const LEFT_BOTTOM = CARD.y + CARD.h;
 
-const lineY = [318, 350];
-const chipY = 406;
+// The icon's ink does not fill its 1000-unit grid: the sheet spans y 82..918
+// once the 26px stroke is counted, so those 8% margins have to come off before
+// the mark can sit flush with the card's top edge.
+const INK_TOP = 0.082;
+const INK_BOTTOM = 0.918;
+const GAP = 52; // edge-to-edge between the four groups
+
+const markX = PAD;
+const markY = LEFT_TOP - MARK.size * INK_TOP;
+const markInkBottom = markY + MARK.size * INK_BOTTOM;
+const titleX = markX + MARK.size + MARK.gap;
+const titleBaseline = markY + MARK.size / 2 + 24; // 24 = half the cap height of 68px text
+
+const lineY = [markInkBottom + GAP + 17, markInkBottom + GAP + 49];
+const chipY = lineY[1] + 6 + GAP;
 const chipH = 36;
+const urlY = LEFT_BOTTOM - 5;
 const CHIP_PX = 9.4; // approx advance width for 14px uppercase Helvetica + letter-spacing
 
 const chips = COPY.chips.map((label) => ({ label, w: label.length * CHIP_PX + 34 }));
@@ -121,7 +139,7 @@ function termSvg() {
 }
 
 // --- the card ---------------------------------------------------------------
-const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Soma — local-first semantic search">
+const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Soma — local semantic search over your own files">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="${C.bg0}"/>
@@ -173,6 +191,7 @@ ${chips
     return `  <g><rect x="${x}" y="${chipY}" width="${c.w}" height="${chipH}" rx="${chipH / 2}" fill="${C.chip}" stroke="${C.cardLine}" stroke-opacity="0.10"/><text x="${x + c.w / 2}" y="${chipY + chipH / 2 + 5}" text-anchor="middle" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="14" letter-spacing="1.1" fill="${C.chipText}">${esc(c.label)}</text></g>`;
   })
   .join("\n")}
+  <text x="${PAD}" y="${urlY}" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="19" letter-spacing="0.4" fill="${C.chipText}">${esc(COPY.url)}</text>
 
   <!-- terminal card -->
   <g filter="url(#shadow)">
