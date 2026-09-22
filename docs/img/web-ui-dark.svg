@@ -11,19 +11,43 @@
   <text x="500" y="56" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12" text-anchor="middle" fill="#a1a1a6">localhost:8181/?q=how does auth work&amp;mode=hybrid</text>
   <path d="M30 128 h940" stroke="#424245" stroke-width="1"/>
   
+  <!-- mark: docs/specs/icon.svg on its 1000-unit grid -->
   <g transform="translate(52 86) scale(0.028)">
-    <g fill="none" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M175 95 H660 L862 290 V855 A50 50 0 0 1 812 905 H175 A50 50 0 0 1 125 855 V145 A50 50 0 0 1 175 95 Z" stroke="#6d7789" stroke-width="26"/>
-      <path d="M662 97 V262 A28 28 0 0 0 690 290 H860" stroke="#6d7789" stroke-width="26"/>
-      <path d="M222 535 h96 M222 640 h306 M222 745 h248" stroke="#6d7789" stroke-width="22"/>
-      <path d="M300 182 C262 182 260 214 260 253 V391 C260 431 240 445 222 431 C210 420 208 399 214 384" stroke="#f5f5f7" stroke-width="22"/>
+    <g transform="translate(500 500) scale(.84) translate(-500 -510)" fill="none" stroke-linecap="round">
+      <path d="M700 200 Q580 120 460 180 Q340 240 340 340 Q340 440 500 500 Q660 560 660 660 Q660 760 540 820 Q420 880 300 800" stroke="#059669" stroke-width="32"/>
+      <g stroke="#059669" stroke-width="22">
+        <path d="M700 200 Q780 140 840 120"/>
+        <path d="M340 340 Q260 300 200 240"/>
+        <path d="M660 660 Q740 700 800 760"/>
+        <path d="M300 800 Q220 840 180 900"/>
+      </g>
+      <g stroke="#10B981" stroke-width="18">
+        <path d="M840 120 Q880 80 920 60"/>
+        <path d="M200 240 Q160 200 140 140"/>
+        <path d="M200 240 Q140 260 80 240"/>
+        <path d="M800 760 Q860 780 900 840"/>
+        <path d="M800 760 Q840 700 900 680"/>
+        <path d="M180 900 Q140 940 100 960"/>
+      </g>
+      <g fill="#10B981" stroke="none">
+        <circle cx="460" cy="180" r="25"/>
+        <circle cx="340" cy="340" r="25"/>
+        <circle cx="660" cy="660" r="25"/>
+        <circle cx="540" cy="820" r="25"/>
+      </g>
+      <g fill="#34D399" stroke="none">
+        <circle cx="920" cy="60" r="22"/>
+        <circle cx="140" cy="140" r="22"/>
+        <circle cx="80" cy="240" r="22"/>
+        <circle cx="900" cy="840" r="22"/>
+        <circle cx="900" cy="680" r="22"/>
+        <circle cx="100" cy="960" r="22"/>
+        <circle cx="700" cy="200" r="26"/>
+        <circle cx="300" cy="800" r="26"/>
+      </g>
+      <circle cx="500" cy="500" r="100" fill="#047857" stroke="none"/>
+      <circle cx="500" cy="500" r="45" fill="#6EE7B7" stroke="none"/>
     </g>
-    <g transform="translate(483 413)">
-      <rect x="117" y="111" width="72" height="142" rx="32" transform="rotate(-45 153 182)" fill="#e8eef8"/>
-      <circle r="158" fill="none" stroke="#f5f5f7" stroke-width="22"/>
-      <path d="M-41 -70 L79 0 L-41 70 Z" fill="#0071e3"/>
-    </g>
-    <text x="620" y="837" font-family="Trebuchet MS, Verdana, DejaVu Sans, sans-serif" font-size="112" font-weight="800" fill="#f5f5f7">MA</text>
   </g>
   <text x="90" y="106" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif" font-size="18" font-weight="600" fill="#f5f5f7">Soma</text>
   <rect x="170" y="84" width="400" height="32" rx="4" fill="#1d1d1f" stroke="#424245" stroke-width="1"/>

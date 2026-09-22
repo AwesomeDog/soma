@@ -6,13 +6,24 @@
 // file you upload). Deterministic: no network, no timestamps, no randomness.
 
 import { execFileSync } from "node:child_process";
-import { mkdirSync, statSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const OUT_SVG = resolve(ROOT, "docs/img/social-preview.svg");
 const OUT_PNG = resolve(ROOT, "docs/img/social-preview.png");
+const ICON = resolve(ROOT, "docs/specs/icon.svg");
+
+// The mark is docs/specs/icon.svg inlined verbatim — single source of truth, so
+// the card can never drift from the icon again. Strip the outer <svg> wrapper
+// and the comments; what is left is one <g> on the icon's own 1000-unit grid.
+const MARK_SVG = readFileSync(ICON, "utf8")
+  .replace(/<!--[\s\S]*?-->/g, "")
+  .replace(/\n[ \t]*\n/g, "\n")
+  .replace(/^[\s\S]*?<svg[^>]*>/, "")
+  .replace(/<\/svg>\s*$/, "")
+  .trim();
 
 const W = 1280;
 const H = 640;
@@ -84,11 +95,12 @@ const esc = (s) =>
 const LEFT_TOP = CARD.y;
 const LEFT_BOTTOM = CARD.y + CARD.h;
 
-// The icon's ink does not fill its 1000-unit grid: the sheet spans y 82..918
-// once the 26px stroke is counted, so those 8% margins have to come off before
-// the mark can sit flush with the card's top edge.
-const INK_TOP = 0.082;
-const INK_BOTTOM = 0.918;
+// The icon's ink does not fill its 1000-unit grid: it spans y 104..896 once the
+// strokes and terminal nodes are counted, so those margins have to come off
+// before the mark can sit flush with the card's top edge. Keep in sync with
+// docs/specs/icon.svg if the geometry ever moves.
+const INK_TOP = 0.104;
+const INK_BOTTOM = 0.896;
 const GAP = 52; // edge-to-edge between the four groups
 
 const markX = PAD;
@@ -162,20 +174,9 @@ const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" 
   <ellipse cx="1150" cy="70" rx="430" ry="300" fill="url(#glowA)"/>
   <ellipse cx="120" cy="620" rx="360" ry="260" fill="url(#glowB)"/>
 
-  <!-- mark: geometry from docs/specs/icon.svg (1000-unit grid, scaled) -->
+  <!-- mark: docs/specs/icon.svg (1000-unit grid, scaled) -->
   <g transform="translate(${markX} ${markY}) scale(${MARK.size / 1000})">
-    <g fill="none" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M175 95 H660 L862 290 V855 A50 50 0 0 1 812 905 H175 A50 50 0 0 1 125 855 V145 A50 50 0 0 1 175 95 Z" stroke="#6d7789" stroke-width="26"/>
-      <path d="M662 97 V262 A28 28 0 0 0 690 290 H860" stroke="#6d7789" stroke-width="26"/>
-      <path d="M222 535 h96 M222 640 h306 M222 745 h248" stroke="#6d7789" stroke-width="22"/>
-      <path d="M300 182 C262 182 260 214 260 253 V391 C260 431 240 445 222 431 C210 420 208 399 214 384" stroke="${C.text}" stroke-width="22"/>
-    </g>
-    <g transform="translate(483 413)">
-      <rect x="117" y="111" width="72" height="142" rx="32" transform="rotate(-45 153 182)" fill="#e8eef8"/>
-      <circle r="158" fill="none" stroke="${C.text}" stroke-width="22"/>
-      <path d="M-41 -70 L79 0 L-41 70 Z" fill="${C.accentSoft}"/>
-    </g>
-    <text x="620" y="837" font-family="Trebuchet MS, Verdana, DejaVu Sans, sans-serif" font-size="112" font-weight="800" fill="${C.text}">MA</text>
+${MARK_SVG.replace(/^/gm, "    ")}
   </g>
 
   <text x="${titleX}" y="${titleBaseline}" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="68" font-weight="700" fill="${C.text}" letter-spacing="-1">${esc(COPY.title)}</text>
