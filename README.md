@@ -155,7 +155,7 @@ Multimedia extraction is optional — text-only indexing works on a modest machi
 winget install AwesomeDog.soma
 
 # macOS (Homebrew)
-brew tap AwesomeDog/tap && brew trust AwesomeDog/tap && brew install AwesomeDog/tap/soma
+brew install AwesomeDog/tap/soma
 
 # Linux (x64)
 curl -fsSL https://github.com/AwesomeDog/soma/releases/latest/download/soma-linux-x64 -o soma
