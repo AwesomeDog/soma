@@ -320,39 +320,18 @@ local RAG, coding assistants and automation.
 
 ```text
 soma
-├── project                                    # Project management
-│   ├── list (ls) [--default-search]           # List configured projects
-│   ├── files <path>                           # List project files by prefix
-│   ├── add <root>                             # Add project
-│   │   ├── --name <name> --include <glob> --exclude <glob>
-│   │   └── --no-ignore-files --no-default-search
-│   ├── update <names...> [--default-search|--no-default-search]
-│   ├── remove <name> | rename <old> <new> | show <name>
-│
-├── sync                                       # Everyday maintenance: pull → scan → extract → embed → clean
-│
-├── search (s)                                 # Search entry point
-│   ├── [hybrid (h)] [query]                   # Default: lexical + vector + HyDE + rerank
-│   │   └── --lex --vec --hyde --intent
-│   ├── lexical (l) <query>                    # BM25 keywords, phrases, exclusions
-│   ├── vector (v) <query> [--intent]          # Pure semantic search
-│   ├── -p/--project <name>  --limit <num>  --no-limit
-│   └── --full  --line-number  -f/--format [text|json|csv|md|paths]
-│
-├── get <targets...>                           # @docid | soma://project/path | project/path | ./file
-│   └── --start-line --max-lines --line-number --max-size -f/--format
-│
-├── server [http] [--port <n>] [--auto-sync]   # Web UI + HTTP API
-│
-├── context                                    # Descriptive hints that improve relevance
-│   └── list (ls) | set <path> <text> | remove <path>   [-p/--project]
-│
-├── status                                     # Workspace, index and artifact status
-├── init                                       # Create directory-local workspace (.soma/)
-│
-└── system                                     # Diagnostics/maintenance; prefer `sync`
-    ├── pull [--refresh] [--export <arc.zip>] [--import <arc.zip>]
-    ├── scan | extract | embed [-p <name>] | clean
+├── project        add <root> · list (ls) · files <path> · update · remove · rename · show
+├── sync           # pull → scan → extract → embed → clean
+├── search (s)     [hybrid (h)] · lexical (l) · vector (v)
+│                  --lex --vec --hyde --intent · -p/--project · --limit · --no-limit
+│                  --full · --line-number · -f/--format [text|json|csv|md|paths]
+├── get            @docid | soma://project/path | project/path | ./file
+│                  --start-line · --max-lines · --line-number · --max-size · -f/--format
+├── server         [http] [--port <n>] [--auto-sync]        # web UI + HTTP API
+├── context        list (ls) · set <path> <text> · remove <path>   [-p/--project]
+├── status         # workspace, index and artifact status
+├── init           # create directory-local workspace (.soma/)
+└── system         pull [--refresh | --export | --import] · scan · extract · embed [-p] · clean
 
 GLOBAL: -w/--workspace | -v/--verbose [SOMA_VERBOSE=1]
         --no-color [NO_COLOR=1] | -h/--help | -V/--version

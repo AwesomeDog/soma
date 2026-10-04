@@ -879,7 +879,7 @@
 
 <!-- ===================== TECH SPECS ===================== -->
 <section class="dark pad" id="specs" data-theme="dark">
-    <div class="wrap">
+    <div class="wrap-wide">
         <p class="eyebrow rv">Tech specs</p>
         <h2 class="h-1 rv">Everything, in detail.</h2>
         <div class="specs rv">
@@ -933,18 +933,22 @@
             <h3 class="h-3" style="margin-bottom:16px">Command cheat sheet</h3>
             <div class="code"><button class="copy" type="button">Copy</button>
                 <pre>soma
-├── project        list · files · add · update · remove · rename · show
+├── project        add &lt;root&gt; · list (ls) · files &lt;path&gt; · update · remove · rename · show
 ├── sync           <span class="cm"># pull → scan → extract → embed → clean</span>
-├── search (s)     [hybrid] · lexical · vector   <span class="fl">--lex --vec --hyde --intent</span>
-│                  <span class="fl">-p/--project  --limit  --no-limit  --full  --line-number  -f/--format</span>
+├── search (s)     [hybrid (h)] · lexical (l) · vector (v)
+│                  <span class="fl">--lex --vec --hyde --intent · -p/--project · --limit · --no-limit</span>
+│                  <span class="fl">--full · --line-number · -f/--format [text|json|csv|md|paths]</span>
 ├── get            @docid | soma://project/path | project/path | ./file
-├── server         [<span class="fl">--port</span> n] [<span class="fl">--auto-sync</span>]        <span class="cm"># web UI + HTTP API</span>
-├── context        list · set &lt;path&gt; &lt;text&gt; · remove
+│                  <span class="fl">--start-line · --max-lines · --line-number · --max-size · -f/--format</span>
+├── server         [http] <span class="fl">[--port &lt;n&gt;] [--auto-sync]</span>        <span class="cm"># web UI + HTTP API</span>
+├── context        list (ls) · set &lt;path&gt; &lt;text&gt; · remove &lt;path&gt;   <span class="fl">[-p/--project]</span>
 ├── status         <span class="cm"># workspace, index and artifact status</span>
 ├── init           <span class="cm"># create directory-local workspace (.soma/)</span>
-└── system         pull [<span class="fl">--refresh --export --import</span>] · scan · extract · embed · clean
+└── system         pull <span class="fl">[--refresh | --export | --import]</span> · scan · extract · embed [-p] · clean
 
-GLOBAL: <span class="fl">-w/--workspace</span> | <span class="fl">-v/--verbose</span> | <span class="fl">--no-color</span> | <span class="fl">-h/--help</span> | <span class="fl">-V/--version</span></pre></div>
+GLOBAL: <span class="fl">-w/--workspace</span> | <span class="fl">-v/--verbose</span> [SOMA_VERBOSE=1]
+        <span class="fl">--no-color</span> [NO_COLOR=1] | <span class="fl">-h/--help</span> | <span class="fl">-V/--version</span>
+WORKSPACE: -w/--workspace &gt; directory-local &gt; SOMA_DEFAULT_WORKSPACE &gt; XDG 'main'</pre></div>
         </div>
     </div>
 </section>
