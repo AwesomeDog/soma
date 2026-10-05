@@ -184,7 +184,7 @@ final class HybridSearch {
       return null;
     }
     progress.accept("Expanding query...");
-    var expansion = searchModels.expand(queryWithIntent(request.query(), request.intent()));
+    var expansion = searchModels.expand(request.query());
     progress.accept("Expanded query.");
     return expansion == null
         ? new SearchModels.Expansion(List.of(), List.of(), List.of())

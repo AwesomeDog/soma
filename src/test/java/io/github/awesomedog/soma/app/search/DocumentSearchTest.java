@@ -49,8 +49,7 @@ class DocumentSearchTest {
                 "original query", "manual exact", null, null, "migration intent", false, false),
             null);
 
-    assertThat(searchModels.expansionInputs)
-        .containsExactly("original query\nQuery intent: migration intent");
+    assertThat(searchModels.expansionInputs).containsExactly("original query");
     assertThat(index.lexicalCalls)
         .extracting(
             call ->

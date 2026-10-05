@@ -734,7 +734,7 @@ soma search --hyde "The rate limiter uses a sliding window algorithm with a 60-s
 
 ### Intent
 
-Optional background for ambiguous queries (`performance`, `cache`, `security`, `state`); steers expansion, vector search, and snippet selection.
+Optional background for ambiguous queries (`performance`, `cache`, `security`, `state`); steers vector search and snippet selection, not query expansion.
 
 ## Glossary
 
