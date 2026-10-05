@@ -287,7 +287,7 @@ Common options (all search subcommands):
 
 - `-p, --project <name>`: Restrict project; repeatable; default search scope if omitted.
 - `--limit <num>`: Max results; default `20`. Mutually exclusive with `--no-limit`.
-- `--no-limit`: Return all matches.
+- `--no-limit`: Return all matches; vector and hybrid retrieval return at most 4096 candidates per project (sqlite-vec limit).
 - `--full`: Full document bodies instead of snippets.
 - `--line-number`: Include line numbers.
 - `-f, --format [text|json|csv|md|paths]`: Output format; default `text`.

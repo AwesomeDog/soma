@@ -33,6 +33,10 @@ import java.util.Optional;
 // Handles verified read-only queries over the workspace index.
 final class SqliteIndexQueries {
 
+  // sqlite-vec rejects knn queries above this: "k value in knn query too large, provided X and the
+  // limit is 4096". Widening must stop here instead of asking for more.
+  private static final int SQLITE_VEC_MAX_K = 4096;
+
   private static final String PROJECT_STATISTICS_QUERY =
       """
       WITH requested(project_name) AS (VALUES %s),
@@ -324,18 +328,19 @@ final class SqliteIndexQueries {
         if (projectVectorCount <= 0) {
           continue;
         }
-        var chunkLimit = Math.min(limit, projectVectorCount);
+        var maxChunkLimit = (int) Math.min(projectVectorCount, SQLITE_VEC_MAX_K);
+        var chunkLimit = Math.min(limit, maxChunkLimit);
         while (true) {
           var bestHitByPath = new LinkedHashMap<String, SearchHit>();
           for (var hit :
               searchProjectVectorHits(connection, projectName, queryVectorJson, chunkLimit)) {
             bestHitByPath.putIfAbsent(hit.virtualPath(), hit);
           }
-          if (bestHitByPath.size() >= limit || chunkLimit == projectVectorCount) {
+          if (bestHitByPath.size() >= limit || chunkLimit == maxChunkLimit) {
             vectorSearchHits.addAll(bestHitByPath.values().stream().limit(limit).toList());
             break;
           }
-          chunkLimit = (int) Math.min(projectVectorCount, (long) chunkLimit * 2);
+          chunkLimit = Math.min(maxChunkLimit, chunkLimit * 2);
         }
       }
       return vectorSearchHits.stream()

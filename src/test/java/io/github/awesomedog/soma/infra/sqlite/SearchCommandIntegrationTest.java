@@ -31,6 +31,11 @@ import org.junit.jupiter.api.io.TempDir;
 
 class SearchCommandIntegrationTest {
 
+  // One chunk per document, so this is also the vector count of the "big" project: one past the
+  // sqlite-vec knn ceiling of 4096.
+  private static final int BIG_PROJECT_DOCUMENTS = 4097;
+  private static final int SQLITE_VEC_MAX_K = 4096;
+
   private static final String ALPHA_BODY =
       """
       # Alpha Deployment Guide
@@ -217,6 +222,27 @@ class SearchCommandIntegrationTest {
         .containsExactly(
             "task: search result | query: semantic\nQuery intent: alpha",
             "task: search result | query: semantic\nQuery intent: beta");
+  }
+
+  @Test
+  void capsVectorKnnKAtTheSqliteVecCeiling() throws Exception {
+    var bigRoot = Files.createDirectories(temporaryDirectory.resolve("big"));
+    for (var position = 0; position < BIG_PROJECT_DOCUMENTS; position++) {
+      Files.writeString(
+          bigRoot.resolve("doc-" + position + ".md"),
+          "# Big Doc " + position + "\nbody line " + position + "\n");
+    }
+    assertThat(run("project", "add", bigRoot.toString(), "--name", "big").exitCode()).isZero();
+    assertThat(run("system", "embed").exitCode()).isZero();
+    assertThat(vectorCount(List.of("big"))).isEqualTo(BIG_PROJECT_DOCUMENTS);
+
+    var result =
+        run("search", "vector", "semantic", "--project", "big", "--no-limit", "--format", "json");
+    assertThat(result.exitCode()).isZero();
+    assertThat(paths(search(result)))
+        .isNotEmpty()
+        .hasSizeLessThanOrEqualTo(SQLITE_VEC_MAX_K)
+        .hasSizeLessThan(BIG_PROJECT_DOCUMENTS);
   }
 
   private RuntimeBeanDefinition<WorkspaceIndex> indexBean() {
