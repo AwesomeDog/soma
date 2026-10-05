@@ -757,12 +757,19 @@ public final class ManagedArtifacts implements ArtifactProvisioner {
         .orElseThrow(() -> new IllegalArgumentException("Unknown managed artifact: " + artifactId));
   }
 
-  private boolean packageIsInValid(String sha256) {
+  private boolean packageIsInValid(String sha256) throws IOException {
     var path = packagePath(sha256);
     try {
       return !Files.isRegularFile(path, NOFOLLOW_LINKS) || !sha256.equals(Hashing.sha256Hex(path));
     } catch (IOException e) {
-      return true;
+      // Unreadable is not the same as corrupt: a package we cannot read must not be re-downloaded.
+      throw new IOException(
+          "Could not read managed artifact package "
+              + sha256
+              + " to verify it ("
+              + e.getMessage()
+              + "). It was left in place; check permissions, open file limits, and that the package directory is available.",
+          e);
     }
   }
 

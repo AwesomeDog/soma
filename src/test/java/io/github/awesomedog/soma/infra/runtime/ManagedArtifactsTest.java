@@ -3,6 +3,7 @@ package io.github.awesomedog.soma.infra.runtime;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
 import com.sun.net.httpserver.HttpServer;
 import io.github.awesomedog.soma.app.common.AppError;
@@ -17,8 +18,10 @@ import java.net.InetSocketAddress;
 import java.net.http.HttpClient;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -168,6 +171,32 @@ class ManagedArtifactsTest {
       assertThat(packagePath(badRoot, badSpec)).doesNotExist();
       assertThat(badRoot.resolve("live/old")).hasContent("old");
     } finally {
+      server.stop(0);
+    }
+  }
+
+  @Test
+  void reportsAnUnreadablePackageInsteadOfRedownloadingIt() throws Exception {
+    assumeFalse(HostPlatform.current().isWindows());
+    var one = bytes("one");
+    var requests = new AtomicInteger();
+    var server = server(Map.of("/one", one), requests);
+    var root = temporaryDirectory.resolve("unreadable");
+    var spec = spec("one", "1", "all", url(server, "/one"), one, "file", 0, "one", false);
+    try {
+      writePackage(root, spec, one);
+      Files.setPosixFilePermissions(packagePath(root, spec), Set.of());
+
+      assertThatThrownBy(() -> artifacts(root, List.of(spec)).pull(true))
+          .isInstanceOf(AppException.class)
+          .extracting(error -> ((AppException) error).error().code())
+          .isEqualTo(AppError.Code.OPERATION_FAILED);
+      assertThat(requests).hasValue(0);
+    } finally {
+      var packagePath = packagePath(root, spec);
+      if (Files.exists(packagePath)) {
+        Files.setPosixFilePermissions(packagePath, PosixFilePermissions.fromString("rw-r--r--"));
+      }
       server.stop(0);
     }
   }
