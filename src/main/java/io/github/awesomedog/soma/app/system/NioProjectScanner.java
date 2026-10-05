@@ -73,6 +73,7 @@ public final class NioProjectScanner {
       scanDirectory(scan, root, ignores);
       readFiles.sort(Comparator.comparing(ReadFile::documentPath));
       unchangedDocumentPaths.sort(Comparator.naturalOrder());
+      warnAboutUnmatchedIncludes(scan, project.include(), readFiles, unchangedDocumentPaths);
       return new ScanResult(readFiles, unchangedDocumentPaths);
     } catch (IOException e) {
       throw new AppException(
@@ -317,6 +318,28 @@ public final class NioProjectScanner {
 
   private static boolean matchesAny(List<Glob> globs, String relativePath) {
     return globs.stream().anyMatch(glob -> glob.matches(relativePath));
+  }
+
+  // A glob that silently matches nothing is almost always a mistake, most often several patterns
+  // packed into one --include. Say so instead of indexing an empty project.
+  private static void warnAboutUnmatchedIncludes(
+      ScanContext scan,
+      List<String> patterns,
+      List<ReadFile> readFiles,
+      List<String> unchangedDocumentPaths) {
+    for (var position = 0; position < scan.includes().size(); position++) {
+      var include = scan.includes().get(position);
+      var matched =
+          readFiles.stream().anyMatch(file -> include.matches(file.documentPath()))
+              || unchangedDocumentPaths.stream().anyMatch(include::matches);
+      if (!matched) {
+        scan.warnings()
+            .accept(
+                "Include glob \""
+                    + patterns.get(position)
+                    + "\" matched no files. Use one --include per pattern.");
+      }
+    }
   }
 
   private static IgnoreFrame readIgnoreFile(Path directory) throws IOException {

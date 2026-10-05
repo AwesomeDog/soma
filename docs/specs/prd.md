@@ -212,7 +212,7 @@ Options:
 Notes:
 
 - Names canonicalized before uniqueness checks. Roots expand `~`, normalize to absolute paths; `project add` stores the resolved absolute path.
-- Globs are root-relative. Filter order: ignore files → `--include` → `--exclude`; only `--no-ignore-files` bypasses ignore files. Include lists cannot be empty; `**/*.md` matches root-level files.
+- Globs are root-relative. Filter order: ignore files → `--include` → `--exclude`; only `--no-ignore-files` bypasses ignore files. Include lists cannot be empty; `**/*.md` matches root-level files. Use one `--include` per pattern; a glob matching no files is reported as a warning.
 - VCS directories always skipped; common generated directories may be skipped. Scans use stable normalized path order and do not follow directory symlinks; file symlinks may use resolved content.
 - Unreadable root fails. Unreadable file is recorded as failed when possible, else warned and skipped. Empty text is valid; rich files start pending; unsupported binaries fail.
 

@@ -16,6 +16,7 @@ import java.nio.file.FileStore;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -36,6 +37,27 @@ class NioProjectScannerTest {
     var files = scan(new NioProjectScanner(), project(root, List.of("**/*.md"), List.of(), true));
 
     assertThat(files).extracting(ReadFile::documentPath).containsExactly("root.md");
+  }
+
+  @Test
+  void warnsWhenAnIncludeGlobMatchesNothing() throws Exception {
+    var root = Files.createDirectories(temporaryDirectory.resolve("warn"));
+    Files.writeString(root.resolve("a.md"), "a\n");
+    Files.writeString(root.resolve("b.txt"), "b\n");
+
+    assertThat(
+            scanWarnings(
+                new NioProjectScanner(), project(root, List.of("a.md,*.txt"), List.of(), false)))
+        .containsExactly(
+            "Include glob \"a.md,*.txt\" matched no files. Use one --include per pattern.");
+    assertThat(
+            scanWarnings(
+                new NioProjectScanner(), project(root, List.of("**/*.md"), List.of(), false)))
+        .isEmpty();
+    assertThat(
+            scanWarnings(
+                new NioProjectScanner(), project(root, List.of("**/*.{md,txt}"), List.of(), false)))
+        .isEmpty();
   }
 
   @Test
@@ -195,5 +217,11 @@ class NioProjectScannerTest {
 
   private static List<ReadFile> scan(NioProjectScanner scanner, ProjectConfig project) {
     return scanner.scan(project, Map.of(), ignored -> {}, ignored -> {}).readFiles();
+  }
+
+  private static List<String> scanWarnings(NioProjectScanner scanner, ProjectConfig project) {
+    var warnings = new ArrayList<String>();
+    scanner.scan(project, Map.of(), warnings::add, ignored -> {});
+    return warnings;
   }
 }

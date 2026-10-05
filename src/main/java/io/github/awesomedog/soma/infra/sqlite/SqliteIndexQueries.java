@@ -440,10 +440,14 @@ final class SqliteIndexQueries {
 
   private static String buildLexicalTermClause(String raw) {
     var tokens = LexicalProjector.tokens(raw);
-    if (raw.indexOf('-') > 0 && tokens.size() > 1) {
-      return quoteFtsToken(String.join(" ", tokens)) + "*";
+    if (requiresOriginalPhraseVerification(raw)) {
+      return String.join(
+          " AND ", tokens.stream().map(token -> quoteFtsToken(token) + "*").toList());
     }
-    return String.join(" AND ", tokens.stream().map(token -> quoteFtsToken(token) + "*").toList());
+    // A bare term is a prefix match, but its tokens stay adjacent like a phrase: projecting the
+    // document splits on the same separators, so "provision.ts" must not match a document that
+    // happens to contain "provision" and "ts" far apart.
+    return quoteFtsToken(String.join(" ", tokens)) + "*";
   }
 
   private static String buildLexicalPhraseClause(String raw) {

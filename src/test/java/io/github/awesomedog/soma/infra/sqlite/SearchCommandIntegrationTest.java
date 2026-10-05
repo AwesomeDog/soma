@@ -151,6 +151,21 @@ class SearchCommandIntegrationTest {
   }
 
   @Test
+  void bareMultiTokenTermsRequireAdjacency() throws Exception {
+    var docsRoot = temporaryDirectory.resolve("docs");
+    Files.writeString(
+        docsRoot.resolve("adjacent.md"), "# Adjacent\npath src/lib/provision.ts here\n");
+    Files.writeString(
+        docsRoot.resolve("scattered.md"), "# Scattered\nsrc then lib then provision then ts\n");
+    assertThat(run("system", "scan").exitCode()).isZero();
+
+    assertThat(paths(search(run("search", "lexical", "provision.ts", "--no-limit"))))
+        .containsExactly("soma://docs/adjacent.md");
+    assertThat(paths(search(run("search", "lexical", "provision.ts -here", "--no-limit"))))
+        .isEmpty();
+  }
+
+  @Test
   void searchesRealVectorsAndRunsTheFullyManualHybridPipeline() throws Exception {
     assertRealVectorSearchUsesEmbeddedIndex();
 
