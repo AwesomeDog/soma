@@ -50,11 +50,61 @@ jobs:
       - name: Setup MSVC Developer Command Prompt
         uses: ilammy/msvc-dev-cmd@v1
 
+      - name: Build with the UTF-8 code page
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          # Windows counterpart of the Linux build locale: sun.jnu.encoding decides the charset
+          # used to encode/decode filesystem paths and native image bakes in whatever the build
+          # host reports. Windows takes it from GetACP(), the JDK refuses -Dsun.jnu.encoding
+          # overrides, and the system-wide UTF-8 code page needs a reboot, so patch the JVM
+          # launcher's manifest instead - Windows honours activeCodePage per executable.
+          $manifest = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+            '<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">' +
+            '<application><windowsSettings>' +
+            '<activeCodePage xmlns="http://schemas.microsoft.com/SMI/2019/WindowsSettings">UTF-8</activeCodePage>' +
+            '</windowsSettings></application></assembly>'
+          Set-Content -Path utf8-codepage.manifest -Value $manifest -Encoding ascii
+          mt.exe -nologo -manifest utf8-codepage.manifest -outputresource:"$env:JAVA_HOME\bin\java.exe;#1"
+          $java = Join-Path $env:JAVA_HOME 'bin\java.exe'
+          $props = (& $java -XshowSettings:properties -version 2>&1) | Out-String
+          $props -split "`n" | Select-String 'jnu\.encoding|native\.encoding'
+          if ($props -notmatch 'sun\.jnu\.encoding\s*=\s*UTF-8') {
+            throw "The build JVM is not on the UTF-8 code page; sun.jnu.encoding would bake as Cp1252."
+          }
+
       - name: Build Windows native executable
         run: |
           mvn -Pnative-windows-x64 -DskipTests clean package
           .\target\soma-windows-x64.exe --version
           .\target\soma-windows-x64.exe --help
+
+      - name: Verify non-ASCII file names
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $workdir = Join-Path $env:RUNNER_TEMP 'soma-utf8-check'
+          $binary = Join-Path $env:GITHUB_WORKSPACE 'target\soma-windows-x64.exe'
+          $utf8 = [System.Text.UTF8Encoding]::new($false)
+          if (Test-Path $workdir) { Remove-Item -Recurse -Force $workdir }
+          New-Item -ItemType Directory -Path (Join-Path $workdir 'Übungen') -Force | Out-Null
+          [System.IO.File]::WriteAllText(
+            (Join-Path $workdir 'Übungen\Grüße.md'), "# Grüße aus der Übung`n", $utf8)
+          [System.IO.File]::WriteAllText(
+            (Join-Path $workdir 'Übungen\日本語.md'), "# 日本語のノート`n", $utf8)
+          Push-Location $workdir
+          & $binary init
+          $scan = (& $binary project add . --name utf8 --include '**/*.md' 2>&1) | Out-String
+          $files = (& $binary project files utf8 2>&1) | Out-String
+          Pop-Location
+          Write-Host $scan
+          Write-Host $files
+          if ($scan -notmatch 'Scan: 2 ready, 0 pending, 0 failed') {
+            throw "Non-ASCII file names were not indexed; sun.jnu.encoding is likely not UTF-8: $scan"
+          }
+          if ($files -notmatch 'Übungen/日本語.md') {
+            throw "Non-ASCII file name was indexed under a mangled path: $files"
+          }
 
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v7
@@ -68,6 +118,14 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/graalvm/native-image-community:25.0.2-ol10-20260120
+    env:
+      # sun.jnu.encoding decides the charset used to encode/decode filesystem paths, and native
+      # image bakes in whatever the build host resolves. The JDK refuses command-line overrides
+      # for it, so the build locale is the only lever. This image declares LANG=en_US.UTF-8 but
+      # ships no locale data, so setlocale() fails and nl_langinfo(CODESET) reports
+      # ANSI_X3.4-1968; C.UTF-8 is built into glibc and needs no locale archive.
+      LANG: C.UTF-8
+      LC_ALL: C.UTF-8
     steps:
       - name: Install git and build dependencies
         run: |
@@ -81,9 +139,27 @@ jobs:
 
       - name: Build Linux native executable
         run: |
+          # Fail fast, before the image build bakes it in, if the locale above did not take.
+          java -XshowSettings:properties -version 2>&1 | grep -E 'jnu\.encoding|native\.encoding'
+          java -XshowSettings:properties -version 2>&1 | grep -q 'sun\.jnu\.encoding = UTF-8'
           mvn -Pnative-linux-x64 -DskipTests clean package
           ./target/soma-linux-x64 --version
           ./target/soma-linux-x64 --help
+
+      - name: Verify non-ASCII file names
+        run: |
+          set -euo pipefail
+          workdir="$GITHUB_WORKSPACE/target/soma-utf8-check"
+          binary="$GITHUB_WORKSPACE/target/soma-linux-x64"
+          rm -rf "$workdir"
+          mkdir -p "$workdir/Übungen"
+          printf '# Grüße aus der Übung\n' > "$workdir/Übungen/Grüße.md"
+          printf '# 日本語のノート\n' > "$workdir/Übungen/日本語.md"
+          cd "$workdir"
+          "$binary" init
+          "$binary" project add . --name utf8 --include '**/*.md' 2>&1 | tee scan.txt
+          grep -q 'Scan: 2 ready, 0 pending, 0 failed' scan.txt
+          "$binary" project files utf8 | grep -q 'Übungen/日本語.md'
 
       - name: Upload Linux artifact
         uses: actions/upload-artifact@v7
