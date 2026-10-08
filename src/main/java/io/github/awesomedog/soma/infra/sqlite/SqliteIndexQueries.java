@@ -23,6 +23,7 @@ import java.sql.SQLException;
 import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -337,7 +338,9 @@ final class SqliteIndexQueries {
             bestHitByPath.putIfAbsent(hit.virtualPath(), hit);
           }
           if (bestHitByPath.size() >= limit || chunkLimit == maxChunkLimit) {
-            vectorSearchHits.addAll(bestHitByPath.values().stream().limit(limit).toList());
+            vectorSearchHits.addAll(
+                withDocumentBodies(
+                    connection, bestHitByPath.values().stream().limit(limit).toList()));
             break;
           }
           chunkLimit = Math.min(maxChunkLimit, chunkLimit * 2);
@@ -368,13 +371,12 @@ final class SqliteIndexQueries {
             WHERE embedding MATCH ? AND k = ? AND project_name = ?)
         SELECT d.project_name, d.path, d.title, e.content_hash, e.chunk_index,
                c.char_start_offset, c.char_end_offset, c.body AS evidence_body,
-               dc.body AS document_body, vector_hits.distance
+               vector_hits.distance
         FROM vector_hits
         JOIN embeddings AS e ON e.id = vector_hits.embedding_id
         JOIN documents AS d ON d.id = e.document_id
         JOIN chunks AS c
           ON c.content_hash = e.content_hash AND c.chunk_index = e.chunk_index
-        JOIN contents AS dc ON dc.content_hash = e.content_hash
         WHERE d.extraction_status = 'ready'
         ORDER BY vector_hits.distance, d.project_name, d.path, e.chunk_index
         """;
@@ -395,7 +397,7 @@ final class SqliteIndexQueries {
                   rows.getString("title"),
                   rows.getString("content_hash"),
                   rows.getString("evidence_body"),
-                  rows.getString("document_body"),
+                  null,
                   rows.getInt("chunk_index"),
                   rows.getInt("char_start_offset"),
                   rows.getInt("char_end_offset"),
@@ -404,6 +406,47 @@ final class SqliteIndexQueries {
         return hits;
       }
     }
+  }
+
+  // A document body is only needed once a hit survives de-duplication: result fusion only checks
+  // that it is non-blank, and only --full / --line-number render it. Reading it per kNN row would
+  // hold up to SQLITE_VEC_MAX_K copies of one document in memory, which exhausts the heap as soon
+  // as a corpus contains a large document.
+  private static List<SearchHit> withDocumentBodies(Connection connection, List<SearchHit> hits)
+      throws SQLException {
+    var contentHashes = uniqueNonBlankStrings(hits.stream().map(SearchHit::contentHash).toList());
+    if (contentHashes.isEmpty()) {
+      return hits;
+    }
+    var sql =
+        "SELECT content_hash, body FROM contents WHERE content_hash IN ("
+            + placeholders(contentHashes.size())
+            + ")";
+    var bodies = new HashMap<String, String>(contentHashes.size());
+    try (var statement = connection.prepareStatement(sql)) {
+      bindStringParameters(statement, 1, contentHashes);
+      try (var rows = statement.executeQuery()) {
+        while (rows.next()) {
+          bodies.put(rows.getString("content_hash"), rows.getString("body"));
+        }
+      }
+    }
+    var hitsWithBodies = new ArrayList<SearchHit>(hits.size());
+    for (var hit : hits) {
+      hitsWithBodies.add(
+          new SearchHit(
+              hit.project(),
+              hit.path(),
+              hit.title(),
+              hit.contentHash(),
+              hit.evidenceBody(),
+              bodies.getOrDefault(hit.contentHash(), ""),
+              hit.chunkIndex(),
+              hit.evidenceStartOffset(),
+              hit.evidenceEndOffset(),
+              hit.score()));
+    }
+    return hitsWithBodies;
   }
 
   private int countProjectVectorRows(Connection connection, String project) throws SQLException {
