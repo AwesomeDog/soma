@@ -149,6 +149,11 @@ jobs:
       - name: Verify non-ASCII file names
         run: |
           set -euo pipefail
+          # sqlite-vec's vec0.so needs libm, but neither the extension nor soma links it, so the
+          # index database cannot be opened without preloading the system libm (see README FAQ).
+          libm=$(ldconfig -p | grep -o '/[^ ]*libm\.so\.6' | head -1)
+          test -n "$libm" || { echo "libm.so.6 not found by ldconfig"; exit 1; }
+          export LD_PRELOAD="$libm"
           workdir="$GITHUB_WORKSPACE/target/soma-utf8-check"
           binary="$GITHUB_WORKSPACE/target/soma-linux-x64"
           rm -rf "$workdir"
