@@ -430,6 +430,22 @@ to learn.
 By default under XDG state directories. Run `soma init` in a folder to keep config and index in `./.soma/`, so the
 searchable index travels with the directory.
 
+**On Linux, Soma fails with `undefined symbol: sqrtf`. What do I do?**
+The bundled `sqlite-vec` extension is built without a `libm` dependency, and Soma itself does not link `libm`, so the
+math symbols it needs are missing from the process. Preload the system `libm` as a workaround:
+
+```shell
+# locate your libm
+ldconfig -p | grep libm.so.6
+
+# then, depending on your distro
+LD_PRELOAD=/usr/lib/libm.so.6 soma sync                     # Arch / Manjaro
+LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libm.so.6 soma sync    # Debian / Ubuntu
+LD_PRELOAD=/usr/lib64/libm.so.6 soma sync                   # RHEL / Fedora / Oracle Linux
+```
+
+`LD_PRELOAD` can also be exported once in your shell profile instead of typed per command.
+
 **Something looks stale or broken. What do I run?**
 `soma sync` for the normal cycle, `soma system scan` for a full re-read of every file, `soma status` for diagnostics.
 
@@ -456,9 +472,6 @@ mvn -Pnative-linux-x64   -DskipTests clean package   # → target/soma-linux-x64
 
 # Run
 ./target/soma-mac-arm64 --help
-
-# Older Linux environments may need this because of sqlite-vec
-LD_PRELOAD=/usr/lib64/libm.so.6 soma sync
 
 # Release: bump version & trigger CI
 v=v0.9.1 && git tag -a "$v" -m "Release $v" && git push origin "$v"
