@@ -140,7 +140,7 @@ Every stage — expansion, embedding, retrieval and reranking — runs locally.
 | Category | Typical formats | How Soma makes it searchable |
 |---|---|---|
 | **Text & code** | Markdown, TXT, CSV, source files | Indexed directly |
-| **PDF** | `.pdf` | Text-layer extraction, OCR for scanned pages |
+| **PDF** | `.pdf` | Text-layer extraction |
 | **Office & ebooks** | `.docx`, `.xlsx`, `.pptx`, `.epub`, … | Converted to Markdown via Pandoc |
 | **Images & screenshots** | `.png`, `.jpg`, `.webp`, … | OCR text + vision-LLM description |
 | **Audio & video** | `.mp3`, `.wav`, `.m4a`, `.mp4`, `.mkv`, … | FFmpeg + Whisper transcription |
@@ -378,7 +378,7 @@ The export is reproducible (identical package hashes produce a byte-identical ZI
 ## Use Cases
 
 - 🧠 **Personal knowledge base / second brain** — search Obsidian, Logseq, Zettelkasten or plain Markdown vaults by meaning.
-- 📚 **Research library** — semantic search across hundreds of PDFs, including scanned papers via OCR.
+- 📚 **Research library** — semantic search across hundreds of PDFs, papers and notes by meaning.
 - 💻 **Codebase and internal docs** — find "where is retry logic handled" without knowing the function name.
 - 🎙️ **Meetings, lectures, podcasts** — transcribe once, then search what was actually said.
 - 🖼️ **Screenshot and photo archives** — OCR + vision descriptions make images findable.
