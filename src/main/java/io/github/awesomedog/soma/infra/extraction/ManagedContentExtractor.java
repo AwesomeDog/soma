@@ -626,7 +626,7 @@ public final class ManagedContentExtractor implements ContentExtractor {
         "media.transcribe",
         "v1",
         "ffmpeg=-y -v error -i <source> -ar 16000 -ac 1 <wav>",
-        "whisper=-m <model> -f <wav> --language auto --no-timestamps --no-prints",
+        "whisper=-m <model> -f <wav> --language auto --no-timestamps --no-prints --gpu auto",
         "output=utf8-strip-nonempty",
         artifactRecipeId(MEDIA_ARTIFACTS));
   }
@@ -688,7 +688,9 @@ public final class ManagedContentExtractor implements ContentExtractor {
             "--language",
             "auto",
             "--no-timestamps",
-            "--no-prints"),
+            "--no-prints",
+            "--gpu",
+            "auto"),
         wav.getParent());
   }
 
