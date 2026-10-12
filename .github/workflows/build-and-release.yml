@@ -79,21 +79,30 @@ jobs:
           .\target\soma-windows-x64.exe --version
           .\target\soma-windows-x64.exe --help
 
-      - name: Verify non-ASCII file names
+      - name: Verify non-ASCII file names and arguments
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          $workdir = Join-Path $env:RUNNER_TEMP 'soma-utf8-check'
           $binary = Join-Path $env:GITHUB_WORKSPACE 'target\soma-windows-x64.exe'
           $utf8 = [System.Text.UTF8Encoding]::new($false)
-          if (Test-Path $workdir) { Remove-Item -Recurse -Force $workdir }
-          New-Item -ItemType Directory -Path (Join-Path $workdir 'Übungen') -Force | Out-Null
-          [System.IO.File]::WriteAllText(
-            (Join-Path $workdir 'Übungen\Grüße.md'), "# Grüße aus der Übung`n", $utf8)
-          [System.IO.File]::WriteAllText(
-            (Join-Path $workdir 'Übungen\日本語.md'), "# 日本語のノート`n", $utf8)
-          Push-Location $workdir
-          & $binary init
+
+          function New-Utf8Workspace([string] $dir) {
+            if (Test-Path $dir) { Remove-Item -Recurse -Force $dir }
+            New-Item -ItemType Directory -Path (Join-Path $dir 'Übungen') -Force | Out-Null
+            [System.IO.File]::WriteAllText(
+              (Join-Path $dir 'Übungen\Grüße.md'), "# Grüße aus der Übung`n", $utf8)
+            [System.IO.File]::WriteAllText(
+              (Join-Path $dir 'Übungen\日本語.md'), "# 日本語のノート`n", $utf8)
+            Push-Location $dir
+            & $binary init
+            Pop-Location
+          }
+
+          # File names: the scanner reads them off disk, so a mangled sun.jnu.encoding shows up in
+          # the indexed paths.
+          $nameWorkdir = Join-Path $env:RUNNER_TEMP 'soma-utf8-name-check'
+          New-Utf8Workspace $nameWorkdir
+          Push-Location $nameWorkdir
           $scan = (& $binary project add . --name utf8 --include '**/*.md' 2>&1) | Out-String
           $files = (& $binary project files utf8 2>&1) | Out-String
           Pop-Location
@@ -104,6 +113,20 @@ jobs:
           }
           if ($files -notmatch 'Übungen/日本語.md') {
             throw "Non-ASCII file name was indexed under a mangled path: $files"
+          }
+
+          # Arguments: "." never travels through argv, so hand the scanner an absolute non-ASCII
+          # root. It gets its own workspace so the summary counts only this project's files, and a
+          # mangled argv is not a readable directory, so the scan fails before it indexes anything.
+          $argumentWorkdir = Join-Path $env:RUNNER_TEMP 'soma-utf8-arg-check'
+          New-Utf8Workspace $argumentWorkdir
+          Push-Location $argumentWorkdir
+          $project = Join-Path $argumentWorkdir 'Übungen'
+          $argumentScan = (& $binary project add $project --name utf8-arg --include '**/*.md' 2>&1) | Out-String
+          Pop-Location
+          Write-Host $argumentScan
+          if ($argumentScan -notmatch 'Scan: 2 ready, 0 pending, 0 failed') {
+            throw "A non-ASCII argument did not survive the ANSI round trip: $argumentScan"
           }
 
       - name: Upload Windows artifact

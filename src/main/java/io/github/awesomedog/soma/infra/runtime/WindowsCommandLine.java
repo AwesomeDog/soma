@@ -31,9 +31,17 @@ public final class WindowsCommandLine {
     if (args == null || !HostPlatform.current().isWindows()) {
       return args;
     }
+    // ASCII survives every ANSI code page untouched, so an all-ASCII command line has nothing to
+    // recover and is not worth loading Shell32 for.
+    if (Arrays.stream(args).allMatch(WindowsCommandLine::isAscii)) {
+      return args;
+    }
     try {
       return reconcile(args, readWideArgv());
     } catch (Throwable failure) {
+      // Nothing to report this through: the Invocation adapter is not up yet, and this runs before
+      // Logging is configured. Falling back silently leaves Java's own arguments, which is exactly
+      // where a failed recovery has to land anyway.
       return args;
     }
   }
@@ -41,8 +49,11 @@ public final class WindowsCommandLine {
   /**
    * Picks the wide arguments only when they line up with what the runtime passed to {@code main}:
    * same count (after dropping the program name) and identical wherever the narrow argument is pure
-   * ASCII. Anything else (e.g. running on a JVM launcher, or runtime options consumed by the image)
-   * keeps the original arguments.
+   * ASCII. Anything else keeps the original arguments, because the two then disagree for a reason
+   * this class cannot sort out: a JVM launcher puts its own options ahead of the program name, a
+   * native image swallows {@code -D}/{@code -X} options before {@code main} runs, and an argument
+   * the ANSI code page could not represent at all was already flattened to {@code '?'} before
+   * either view of it ever reached Java.
    */
   static String[] reconcile(String[] args, String[] wideArgv) {
     if (wideArgv == null || wideArgv.length != args.length + 1) {
@@ -97,6 +108,11 @@ public final class WindowsCommandLine {
     }
   }
 
+  /**
+   * Reads a null-terminated UTF-16 string. This walks the code units by hand rather than using
+   * {@code getString(0, UTF_16LE)} because a charset decode silently turns unpaired surrogates into
+   * U+FFFD, and NTFS accepts those in file names.
+   */
   private static String readUtf16(MemorySegment pointer) {
     var chars = pointer.reinterpret(Long.MAX_VALUE);
     var builder = new StringBuilder();
