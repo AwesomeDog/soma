@@ -18,6 +18,7 @@ const LICENSE = readFileSync(join(ROOT, "LICENSE"));
 const manifest = JSON.parse(readFileSync(join(ROOT, "npm/soma/package.json"), "utf8"));
 const { name, license, repository, homepage, keywords } = manifest;
 const NAME = name.split("/")[1];
+const REPO = new URL(homepage).pathname.slice(1);
 
 // os and cpu make npm install only the matching package. Assets mirror the
 // native.image.name of each pom.xml profile.
@@ -29,6 +30,7 @@ const PLATFORMS = [
 
 const argv = process.argv.slice(2);
 const version = argv.includes("--version") ? argv[argv.indexOf("--version") + 1] : null;
+const publish = argv.includes("--publish");
 
 if (!version) {
   console.error("usage: node npm/build.mjs --version <x.y.z> [--publish]");
@@ -47,6 +49,28 @@ for (const { asset } of PLATFORMS) {
   const response = await fetch(url);
   if (!response.ok) throw new Error(`${url} -> HTTP ${response.status}`);
   emit(join(ROOT, "npm/assets", asset), Buffer.from(await response.arrayBuffer()));
+}
+
+// GitHub signed each binary when the release workflow attested it, so this proves both integrity
+// and provenance — stronger than any checksum we could publish ourselves. Needs `gh` and network,
+// so it only runs on the way to the registry.
+if (publish) {
+  for (const { asset } of PLATFORMS) {
+    execFileSync(
+      "gh",
+      [
+        "attestation",
+        "verify",
+        join(ROOT, "npm/assets", asset),
+        "--repo",
+        REPO,
+        "--signer-workflow",
+        `${REPO}/.github/workflows/build-and-release.yml`,
+        "--deny-self-hosted-runners",
+      ],
+      { stdio: "inherit" },
+    );
+  }
 }
 
 rmSync(join(ROOT, "npm/dist"), { recursive: true, force: true });
@@ -93,7 +117,7 @@ pkg(main, {
   optionalDependencies: Object.fromEntries(PLATFORMS.map(({ id }) => [`${name}-${id}`, version])),
 });
 
-if (!argv.includes("--publish")) {
+if (!publish) {
   process.stdout.write(`assembled ${version} in ${join(ROOT, "npm/dist")}\n`);
   process.exit(0);
 }
