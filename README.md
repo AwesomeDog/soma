@@ -158,11 +158,7 @@ winget install AwesomeDog.soma
 # macOS (Homebrew)
 brew install AwesomeDog/tap/soma
 
-# Linux (x64)
-curl -fsSL https://github.com/AwesomeDog/soma/releases/latest/download/soma-linux-x64 -o soma
-chmod +x soma && sudo mv soma /usr/local/bin/
-
-# Any platform with Node.js
+# Linux (x64) and any platform with Node.js
 npm install -g @awesomedog/soma
 ```
 
@@ -170,6 +166,9 @@ npm install -g @awesomedog/soma
 
 Grab the single-file executable for your platform from
 [**Releases**](https://github.com/AwesomeDog/soma/releases) — Windows x64, macOS ARM64, Linux x64.
+
+> On Linux, prefer the npm install above: the standalone binary needs the system `libm` preloaded,
+> which the npm launcher does for you. See the FAQ if you need the raw binary.
 
 ```shell
 soma --version

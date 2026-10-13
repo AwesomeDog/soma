@@ -855,10 +855,13 @@
         </div>
         <div class="panel" id="ip-lin" role="tabpanel" aria-labelledby="i-lin" hidden>
             <div class="code"><button class="copy" type="button">Copy</button>
-                <pre><span class="cm"># Linux x64 · single binary</span>
-<span class="pr">$</span> curl -fsSL https://github.com/AwesomeDog/soma/releases/latest/download/soma-linux-x64 -o soma
-<span class="pr">$</span> chmod +x soma &amp;&amp; sudo mv soma /usr/local/bin/
+                <pre><span class="cm"># Linux x64 · npm — the launcher preloads libm for you</span>
+<span class="pr">$</span> npm install -g @awesomedog/soma
 <span class="pr">$</span> soma --version</pre></div>
+            <p class="muted" style="margin-top:14px">Prefer the standalone binary? Download <code>soma-linux-x64</code>
+                from <a href="https://github.com/AwesomeDog/soma/releases">Releases</a> and run it with
+                <code>LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libm.so.6</code> (or your distro's <code>libm.so.6</code>
+                path).</p>
         </div>
         <div class="panel" id="ip-air" role="tabpanel" aria-labelledby="i-air" hidden>
             <div class="code"><button class="copy" type="button">Copy</button>
