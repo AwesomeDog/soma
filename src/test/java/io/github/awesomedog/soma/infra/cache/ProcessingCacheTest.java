@@ -79,6 +79,22 @@ class ProcessingCacheTest {
   }
 
   @Test
+  void recreatesACacheMissingItsSchemaTable() throws Exception {
+    var database = temporaryDirectory.resolve("cache.sqlite");
+    var cache = new ProcessingCache(database);
+    cache.write("pdf.text", PDF_RECIPE, SOURCE_HASH, "old value");
+
+    try (var connection = DriverManager.getConnection("jdbc:sqlite:" + database);
+        var statement = connection.createStatement()) {
+      statement.executeUpdate("DROP TABLE cache_meta");
+    }
+
+    assertThat(cache.read("pdf.text", PDF_RECIPE, SOURCE_HASH)).isEmpty();
+    cache.write("pdf.text", PDF_RECIPE, SOURCE_HASH, "new value");
+    assertThat(cache.read("pdf.text", PDF_RECIPE, SOURCE_HASH)).contains("new value");
+  }
+
+  @Test
   void failuresRemainMissesAndSkippedWrites() throws Exception {
     var parent = Files.writeString(temporaryDirectory.resolve("not-a-directory"), "file");
     var cache = new ProcessingCache(parent.resolve("cache.sqlite"));

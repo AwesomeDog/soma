@@ -9,10 +9,14 @@ import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Objects;
+import java.util.regex.Pattern;
 import org.sqlite.SQLiteErrorCode;
 import org.sqlite.SQLiteException;
 
 public final class SqliteSupport {
+
+  private static final Pattern MISSING_SCHEMA_OBJECT =
+      Pattern.compile("no such (table|column|index|view|trigger):", Pattern.CASE_INSENSITIVE);
 
   private SqliteSupport() {}
 
@@ -55,10 +59,15 @@ public final class SqliteSupport {
   }
 
   public static boolean isSchemaIncompatible(SQLException error) {
-    return isCorruptDatabase(error)
-        || error instanceof SQLiteException sqlite
-            && (sqlite.getResultCode() == SQLiteErrorCode.SQLITE_ERROR
-                || sqlite.getResultCode() == SQLiteErrorCode.SQLITE_SCHEMA);
+    if (isCorruptDatabase(error)) {
+      return true;
+    }
+    if (!(error instanceof SQLiteException sqlite)
+        || sqlite.getResultCode() != SQLiteErrorCode.SQLITE_ERROR) {
+      return false;
+    }
+    var message = error.getMessage();
+    return message != null && MISSING_SCHEMA_OBJECT.matcher(message).find();
   }
 
   public record BundledSchema(String sql, String sha256) {}

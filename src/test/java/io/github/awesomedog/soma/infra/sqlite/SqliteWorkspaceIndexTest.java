@@ -19,6 +19,7 @@ import io.github.awesomedog.soma.support.HostPlatform;
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +30,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.sqlite.SQLiteConnection;
+import org.sqlite.SQLiteErrorCode;
+import org.sqlite.SQLiteException;
 
 class SqliteWorkspaceIndexTest {
 
@@ -100,6 +103,22 @@ class SqliteWorkspaceIndexTest {
     assertThatThrownBy(() -> index.openExistingForWrite(missing, WRITE_LOCK))
         .isInstanceOf(AppException.class);
     assertThat(missing).doesNotExist();
+  }
+
+  @Test
+  void rebuildingRequiresAMissingDatabaseObject() {
+    // Callers delete the database whenever this says the schema is incompatible, so only a file
+    // whose own schema disagrees with the bundled one may qualify. SQLite reports every
+    // unclassified failure as SQLITE_ERROR, and SQLITE_SCHEMA only means a statement went stale.
+    assertThat(incompatible("CREATE TABLE other(a);", "value FROM soma_meta")).isTrue();
+    assertThat(incompatible("CREATE TABLE soma_meta(key TEXT);", "value FROM soma_meta")).isTrue();
+
+    assertThat(incompatible(null, "nosuchfunction(1)")).isFalse();
+    assertThat(incompatible(null, "FROM WHERE")).isFalse();
+    assertThat(
+            SqliteSupport.isSchemaIncompatible(
+                new SQLiteException("stale statement", SQLiteErrorCode.SQLITE_SCHEMA)))
+        .isFalse();
   }
 
   @Test
@@ -702,5 +721,24 @@ class SqliteWorkspaceIndexTest {
     var library = sqliteVec();
     var fileName = library.getFileName().toString();
     return library.resolveSibling(fileName.substring(0, fileName.lastIndexOf('.')));
+  }
+
+  /** Whether {@code SELECT <expression>} fails in a way that justifies rebuilding the database. */
+  private boolean incompatible(String setupSql, String expression) {
+    var file =
+        temporaryDirectory.resolve("classify-" + Math.abs(expression.hashCode()) + ".sqlite");
+    try (var connection = DriverManager.getConnection("jdbc:sqlite:" + file)) {
+      if (setupSql != null) {
+        try (var statement = connection.createStatement()) {
+          statement.execute(setupSql);
+        }
+      }
+      try (var statement = connection.createStatement()) {
+        statement.executeQuery("SELECT " + expression);
+      }
+    } catch (SQLException e) {
+      return SqliteSupport.isSchemaIncompatible(e);
+    }
+    throw new AssertionError("expected a failure from: " + expression);
   }
 }
