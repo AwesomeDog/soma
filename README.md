@@ -161,6 +161,9 @@ brew install AwesomeDog/tap/soma
 # Linux (x64)
 curl -fsSL https://github.com/AwesomeDog/soma/releases/latest/download/soma-linux-x64 -o soma
 chmod +x soma && sudo mv soma /usr/local/bin/
+
+# Any platform with Node.js
+npm install -g @awesomedog/soma
 ```
 
 ### Manual download
@@ -434,6 +437,8 @@ searchable index travels with the directory.
 The bundled `sqlite-vec` extension is built without a `libm` dependency, and Soma itself does not link `libm`, so the
 math symbols it needs are missing from the process. Preload the system `libm` as a workaround:
 
+> Installed via npm? The launcher preloads `libm` for you; the rest applies to the standalone binary.
+
 ```shell
 # locate your libm
 ldconfig -p | grep libm.so.6
@@ -474,8 +479,11 @@ mvn -Pnative-linux-x64   -DskipTests clean package   # → target/soma-linux-x64
 ./target/soma-mac-arm64 --help
 
 # Release: bump version & trigger CI
-v=v0.9.1 && git tag -a "$v" -m "Release $v" && git push origin "$v"
+v=v1.2.3 && git tag -a "$v" -m "Release $v" && git push origin "$v"
 ```
+
+Publishing the release that CI drafted also publishes the npm packages: `publish-npm.yml`
+pushes `@awesomedog/soma` and the three platform packages over OIDC.
 
 Issues and pull requests are welcome — see [docs/specs/prd.md](docs/specs/prd.md) for the canonical behavior spec.
 

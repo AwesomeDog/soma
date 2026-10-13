@@ -1,0 +1,24 @@
+{
+  "name": "@awesomedog/soma",
+  "version": "0.0.0-placeholder",
+  "description": "Local-first semantic search for your documents, PDFs, images, audio and video.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AwesomeDog/soma.git"
+  },
+  "homepage": "https://github.com/AwesomeDog/soma",
+  "keywords": ["search", "semantic-search", "local", "offline", "cli"],
+  "bin": {
+    "soma": "bin/soma.js"
+  },
+  "files": ["bin", "docs"],
+  "engines": {
+    "node": ">=18"
+  },
+  "optionalDependencies": {
+    "@awesomedog/soma-darwin-arm64": "0.0.0-placeholder",
+    "@awesomedog/soma-linux-x64": "0.0.0-placeholder",
+    "@awesomedog/soma-win32-x64": "0.0.0-placeholder"
+  }
+}

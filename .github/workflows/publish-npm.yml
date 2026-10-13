@@ -1,0 +1,30 @@
+name: Publish to npm
+
+# Fires when a GitHub Release goes from draft to published, so npm never carries
+# a version that is still a draft here.
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+
+      - name: Publish
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          set -euo pipefail
+          npm --version
+          node npm/build.mjs --version "${TAG#v}" --publish
