@@ -1,36 +1,32 @@
 #!/usr/bin/env node
 "use strict";
 
-const { execFileSync, spawnSync } = require("node:child_process");
-const { accessSync, constants, existsSync } = require("node:fs");
+const { spawnSync } = require("node:child_process");
+const { accessSync, constants } = require("node:fs");
 const os = require("node:os");
 
 const { name, homepage, optionalDependencies } = require("../package.json");
 const platforms = Object.keys(optionalDependencies).map((dep) => dep.slice(name.length + 1));
+const platform = `${process.platform}-${process.arch}`;
 
 const fail = (message) => {
   console.error(`soma: ${message}`);
   process.exit(1);
 };
 
-// sqlite-vec is built without libm, so loading it dies with "undefined symbol: sqrtf" on Linux
-// unless a libm is preloaded. The bare soname is used so ld.so picks each process's own ABI copy.
-const hasLibm = () => {
-  if (["/usr/lib64", "/lib64", "/usr/lib", "/lib"].some((dir) => existsSync(`${dir}/libm.so.6`))) return true;
-  // Debian and Ubuntu keep libm in a multiarch directory, so ask ldconfig instead; /sbin is not
-  // on a normal user's PATH there either.
-  for (const ldconfig of ["ldconfig", "/sbin/ldconfig", "/usr/sbin/ldconfig"]) {
-    try {
-      const listed = execFileSync(ldconfig, ["-p"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] });
-      if (/^\s*libm\.so\.6\s/m.test(listed)) return true;
-    } catch {}
-  }
-  return false;
-};
-
-const platform = `${process.platform}-${process.arch}`;
 if (!optionalDependencies[`${name}-${platform}`])
   fail(`no build for ${platform}. Supported: ${platforms.join(", ")}. Download one from ${homepage}/releases`);
+
+const hasGlibc = () => {
+  try {
+    process.report.excludeNetwork = true; // keep getReport cheap where supported (Node >= 22.3)
+    return Boolean(process.report.getReport().header.glibcVersionRuntime);
+  } catch {
+    return true; // no diagnostic report: assume the common case and let exec decide
+  }
+};
+if (process.platform === "linux" && !hasGlibc())
+  fail(`the prebuilt binaries need glibc; musl-based distros are not supported. See ${homepage}/releases`);
 
 let binary;
 try {
@@ -39,7 +35,7 @@ try {
   fail(`${name}-${platform} is missing. Reinstall with optional dependencies: npm install -g ${name}`);
 }
 
-// execve aborts instead of throwing when it fails on Node < 26.1, so check the binary first.
+// execve aborts instead of throwing when it fails on Node < 26.1, so catch a lost exec bit here.
 try {
   accessSync(binary, constants.X_OK);
 } catch {
@@ -47,19 +43,21 @@ try {
 }
 
 const env = { ...process.env };
-const preloaded = env.LD_PRELOAD ?? "";
-if (process.platform === "linux" && !/(^|[\s:/])libm\.so\b/.test(preloaded) && hasLibm())
-  env.LD_PRELOAD = preloaded ? `libm.so.6:${preloaded}` : "libm.so.6";
+if (process.platform === "linux" && !/(^|[\s:/])libm\.so\b/.test(env.LD_PRELOAD ?? ""))
+  env.LD_PRELOAD = env.LD_PRELOAD ? `${env.LD_PRELOAD}:libm.so.6` : "libm.so.6";
 
 const args = process.argv.slice(2);
 
-// Node >= 22.15, not Windows: this replaces the process, leaving no parent node holding ~40MB and
-// passing signals and exit codes through untouched. args[0] is argv[0]; nothing may write to stdio.
+// Node >= 22.15, POSIX only: replace this process outright. No parent node holding ~40MB, and
+// signals, terminal control, and exit codes reach soma untouched. args[0] becomes soma's argv[0];
+// nothing may be pending on stdio at this point.
 if (typeof process.execve === "function") {
   try {
     process.execve(binary, [binary, ...args], env);
   } catch {}
 }
+
+if (process.platform !== "win32") process.on("SIGINT", () => {});
 
 const { status, signal, error } = spawnSync(binary, args, { stdio: "inherit", env });
 if (error) fail(error.message);
