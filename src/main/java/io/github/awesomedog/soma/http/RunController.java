@@ -26,10 +26,6 @@ public final class RunController {
       Set.of(
           "project.list",
           "project.files",
-          "project.add",
-          "project.update",
-          "project.remove",
-          "project.rename",
           "project.show",
           "search.hybrid",
           "search.lexical",
