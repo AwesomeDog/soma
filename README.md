@@ -318,6 +318,11 @@ Response envelope:
 Because the HTTP layer mirrors the CLI, **an AI agent that knows `soma --help` already knows the API** — perfect for
 local RAG, coding assistants and automation.
 
+> **The HTTP server has no authentication.** Anything that reaches the port — including a web page you happen to
+> visit — can search your index and read files under your project roots. That is why it only listens on `127.0.0.1`.
+> Exposing it through a tunnel or reverse proxy is your call: put your own auth in front (Cloudflare Access, Caddy
+> `basic_auth`, a VPN) and use TLS.
+
 ## Command Cheat Sheet
 
 ```text
