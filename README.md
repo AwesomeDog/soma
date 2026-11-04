@@ -85,11 +85,11 @@ else's server.
 | **Hybrid search** | Lexical (BM25) + vector (dense embeddings) + HyDE, fused with Reciprocal Rank Fusion and reranked by a local LLM |
 | **Natural-language queries** | `soma search "why do pods restart after deploy"` |
 | **Exact lexical search** | Prefix match, `"quoted phrases"`, `-exclusions`, per-project scoping |
-| **Multilingual + CJK** | Unicode NFKC normalization, camelCase/snake_case/path tokenization, CJK unigram + bigram indexing so 1–2 character queries still work |
+| **Multilingual + CJK** | Unicode NFKC normalization, camelCase/snake_case/path tokenization, CJK unigram, bigram and trigram indexing so 1–2 character queries still work |
 | **Rich file extraction** | PDF text extraction, Office/EPUB → Markdown, OCR, vision-LLM image understanding, audio/video transcription |
-| **Local models only** | EmbeddingGemma, Qwen3 reranker, Qwen3-VL, Whisper — all run through `llama.cpp` / `whisperfile` on CPU or GPU |
+| **Local models only** | EmbeddingGemma, Qwen3 reranker, Qwen3-VL, Whisper — all run locally through `llama.cpp` / `whisperfile` |
 | **Built-in web UI** | `soma server` gives you a searchable browser interface on `http://localhost:8181` |
-| **HTTP API** | `POST /api/run` mirrors the CLI, so agents and scripts get the same contract |
+| **HTTP API** | `POST /api/run` mirrors a strict subset of the CLI, so agents and scripts get the same contract |
 | **Workspaces** | Isolate environments; `soma init` keeps config + index inside `.soma/` so the index travels with the folder |
 | **Context hints** | Attach descriptive text to a project path to improve relevance and snippets |
 | **Cross-platform native binaries** | Windows x64, macOS ARM64, Linux x64 |
@@ -315,7 +315,7 @@ Response envelope:
 }
 ```
 
-Because the HTTP layer mirrors the CLI, **an AI agent that knows `soma --help` already knows the API** — perfect for
+Because the HTTP layer mirrors a strict subset of the CLI, **an AI agent that knows `soma --help` already knows the API** — perfect for
 local RAG, coding assistants and automation.
 
 > **The HTTP server has no authentication.** Anything that reaches the port — including a web page you happen to
@@ -377,7 +377,7 @@ The export is reproducible (identical package hashes produce a byte-identical ZI
 ## System Requirements
 
 - **RAM** — 8 GB minimum for text search; **24 GB or more while multimedia features are running** (OCR, vision, transcription).
-- **GPU** — optional. Everything runs on CPU; a GPU speeds up embedding, vision and transcription considerably.
+- **GPU** — optional. Everything runs on CPU; a GPU speeds up embedding and vision considerably.
 - **OS** — Windows x64, macOS (Apple Silicon / ARM64), Linux x64.
 - **Disk** — space for the local models downloaded on first `sync`.
 - **Network** — only for the first `sync` (model download) or `system pull`; searching is always offline.
@@ -416,13 +416,13 @@ No. Indexing and searching are 100% local. The only network access is downloadin
 No. Soma bundles a local inference stack (`llama.cpp`, `whisperfile`) and downloads open-weight models.
 
 **Do I need a GPU?**
-No. Everything runs on CPU. A GPU mainly accelerates embedding, vision extraction and transcription.
+No. Everything runs on CPU. A GPU mainly accelerates embedding and vision extraction.
 
 **Does it modify or move my files?**
 No. Soma reads your files and writes its index elsewhere. Your folders stay untouched.
 
 **Which languages does it support?**
-Indexing and querying are multilingual, with dedicated CJK handling (unigram + bigram indexing) so short Chinese,
+Indexing and querying are multilingual, with dedicated CJK handling (unigram, bigram and trigram indexing) so short Chinese,
 Japanese and Korean queries remain retrievable.
 
 **How is this different from `ripgrep`?**
@@ -430,7 +430,7 @@ Japanese and Korean queries remain retrievable.
 inside PDFs, Office documents, images, audio and video.
 
 **Can I use Soma as a RAG backend for an AI agent?**
-Yes — use `-f json` from the CLI or `POST /api/run` over HTTP. The API mirrors the CLI, so there is only one contract
+Yes — use `-f json` from the CLI or `POST /api/run` over HTTP. The API mirrors a strict subset of the CLI, so there is only one contract
 to learn.
 
 **Where does the index live, and can I move it?**
@@ -462,7 +462,7 @@ LD_PRELOAD=/usr/lib64/libm.so.6 soma sync                   # RHEL / Fedora / Or
 
 ### Toolchain
 
-- **Java 25** with preview features enabled
+- **Java 25**
 - **Maven 3.9+**
 - **GraalVM 25** with `native-image` on `PATH`
 - Internet access on the first build (Maven dependencies + the platform-specific `sqlite-vec` binary bundled at build time)

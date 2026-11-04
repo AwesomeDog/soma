@@ -535,7 +535,7 @@
             <div class="card c-2 rv">
                 <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 8h14M5 16h14"/><path d="M9 4c-2 5-2 11 0 16M15 4c2 5 2 11 0 16"/></svg>
                 <h3 class="h-3">Multilingual &amp; CJK</h3>
-                <p>Unicode NFKC normalization, camelCase / snake_case / path tokenization, plus CJK unigram + bigram indexing so 1–2 character queries still work.</p>
+                <p>Unicode NFKC normalization, camelCase / snake_case / path tokenization, plus CJK unigram, bigram and trigram indexing so 1–2 character queries still work.</p>
             </div>
             <div class="card c-2 rv">
                 <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M3 9h18M8 14h8"/></svg>
@@ -545,12 +545,12 @@
             <div class="card c-2 rv">
                 <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 4H5a1 1 0 00-1 1v14a1 1 0 001 1h3M16 4h3a1 1 0 011 1v14a1 1 0 01-1 1h-3"/><path d="M12 8v8M9 11l3-3 3 3"/></svg>
                 <h3 class="h-3">Agent-friendly</h3>
-                <p>JSON / CSV / Markdown / paths output and a JSON-RPC-style <code>POST /api/run</code> endpoint that mirrors the CLI. One contract to learn.</p>
+                <p>JSON / CSV / Markdown / paths output and a JSON-RPC-style <code>POST /api/run</code> endpoint that mirrors a strict subset of the CLI. One contract to learn.</p>
             </div>
             <div class="card c-3 rv">
                 <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v4M12 17v4M3 12h4M17 12h4"/><rect x="7" y="7" width="10" height="10" rx="3"/></svg>
                 <h3 class="h-3">Local models only</h3>
-                <p>EmbeddingGemma for embeddings, QMD for query expansion, Qwen3 Reranker, Qwen3-VL for images and Whisper for speech — all via <code>llama.cpp</code> / <code>whisperfile</code>, on CPU or GPU.</p>
+                <p>EmbeddingGemma for embeddings, QMD for query expansion, Qwen3 Reranker, Qwen3-VL for images and Whisper for speech — all run locally via <code>llama.cpp</code> / <code>whisperfile</code>.</p>
             </div>
             <div class="card c-3 rv">
                 <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 7h7l2 2h7v10a1 1 0 01-1 1H5a1 1 0 01-1-1V7z"/><path d="M8 14h8"/></svg>
@@ -747,7 +747,7 @@
                     <tr><th><code class="mono">GET /</code></th><td style="text-align:left">Built-in web interface</td></tr>
                     <tr><th><code class="mono">GET /health</code></th><td style="text-align:left">Health check</td></tr>
                     <tr><th><code class="mono">GET /assets/…</code></th><td style="text-align:left">Raw file under a project root</td></tr>
-                    <tr><th><code class="mono">POST /api/run</code></th><td style="text-align:left">JSON RPC mirroring the CLI</td></tr>
+                    <tr><th><code class="mono">POST /api/run</code></th><td style="text-align:left">JSON RPC mirroring a strict subset of the CLI</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -891,7 +891,7 @@
                 <ul>
                     <li><b>RAM</b> — 8 GB minimum for text search</li>
                     <li><b>RAM</b> — 24 GB+ while multimedia features run (OCR, vision, transcription)</li>
-                    <li><b>GPU</b> — optional; speeds up embedding, vision and transcription</li>
+                    <li><b>GPU</b> — optional; speeds up embedding and vision</li>
                     <li><b>OS</b> — Windows x64 · macOS ARM64 · Linux x64</li>
                     <li><b>Disk</b> — space for models downloaded on first <code>sync</code></li>
                     <li><b>Network</b> — only for the first <code>sync</code> or <code>system pull</code></li>
@@ -977,7 +977,7 @@ WORKSPACE: -w/--workspace &gt; directory-local &gt; SOMA_DEFAULT_WORKSPACE &gt; 
             </details>
             <details>
                 <summary>Do I need a GPU?<span class="pm"></span></summary>
-                <div class="ans">No. Everything runs on CPU. A GPU mainly accelerates embedding, vision extraction and transcription.</div>
+                <div class="ans">No. Everything runs on CPU. A GPU mainly accelerates embedding and vision extraction.</div>
             </details>
             <details>
                 <summary>Does it modify or move my files?<span class="pm"></span></summary>
@@ -985,7 +985,7 @@ WORKSPACE: -w/--workspace &gt; directory-local &gt; SOMA_DEFAULT_WORKSPACE &gt; 
             </details>
             <details>
                 <summary>Which languages does it support?<span class="pm"></span></summary>
-                <div class="ans">Indexing and querying are multilingual, with dedicated CJK handling (unigram + bigram indexing)
+                <div class="ans">Indexing and querying are multilingual, with dedicated CJK handling (unigram, bigram and trigram indexing)
                     so short Chinese, Japanese and Korean queries remain retrievable.</div>
             </details>
             <details>
@@ -996,7 +996,7 @@ WORKSPACE: -w/--workspace &gt; directory-local &gt; SOMA_DEFAULT_WORKSPACE &gt; 
             <details>
                 <summary>Can I use Soma as a RAG backend for an AI agent?<span class="pm"></span></summary>
                 <div class="ans">Yes — use <code>-f json</code> from the CLI or <code>POST /api/run</code> over HTTP. The API
-                    mirrors the CLI, so there is only one contract to learn.</div>
+                    mirrors a strict subset of the CLI, so there is only one contract to learn.</div>
             </details>
             <details>
                 <summary>Where does the index live, and can I move it?<span class="pm"></span></summary>
@@ -1074,7 +1074,7 @@ WORKSPACE: -w/--workspace &gt; directory-local &gt; SOMA_DEFAULT_WORKSPACE &gt; 
                 publishers and run locally. Soma was inspired by <a href="https://github.com/tobi/qmd">QMD</a>, but is a
                 ground-up new implementation with its own engine, CLI and web UI, compiled to cross-platform native binaries
                 via GraalVM.</p>
-            <p style="margin:0">Copyright © 2025 Soma. All rights reserved.</p>
+            <p style="margin:0">Copyright © 2026 AwesomeDog. Licensed under MIT.</p>
         </div>
         <p class="tiny" style="margin:22px 0 0;color:#a1a1a6">
             local semantic search · offline AI search engine · local knowledge base · private document search ·

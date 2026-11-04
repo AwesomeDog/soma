@@ -431,7 +431,7 @@ Health response:
 
 #### HTTP RPC Interface
 
-**Mirrors a strict subset of the CLI and evolves in lockstep with it.** All non-lifecycle CLI operations go through one endpoint:
+**Mirrors a fixed allowlist of CLI commands and evolves in lockstep with it.** All allowed operations go through one endpoint:
 
 ```http
 POST /api/run
@@ -451,7 +451,7 @@ Content-Type: application/json
 
 ##### Mapping Rules
 
-- Accepts `project.*`, `search.*`, `get`, `context.*`, `status`. Rejects unknown commands/globals, and `global.workspace`. Hierarchical commands join with dots (`project list` → `project.list`).
+- Accepts only `project.list`, `project.files`, `project.show`, `search.hybrid`, `search.lexical`, `search.vector`, `get`, `context.list`, `context.set`, `context.remove`, `status`. Rejects unknown commands/globals, and `global.workspace`. Hierarchical commands join with dots (`project list` → `project.list`).
 - `args` preserves positional order. `options` maps flags: arrays for repeated flags, `true` for booleans, keep `no-*` prefixes.
 - HTTP defaults: `verbose=false`, `no-color=true`.
 
