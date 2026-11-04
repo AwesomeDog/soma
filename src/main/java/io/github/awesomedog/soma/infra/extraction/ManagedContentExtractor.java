@@ -626,7 +626,7 @@ public final class ManagedContentExtractor implements ContentExtractor {
         "media.transcribe",
         "v1",
         "ffmpeg=-y -v error -i <source> -ar 16000 -ac 1 <wav>",
-        "whisper=-m <model> -f <wav> --language auto --no-timestamps --no-prints --gpu auto",
+        "whisper=-m <model> -f <wav> --language auto --no-timestamps --no-prints",
         "output=utf8-strip-nonempty",
         artifactRecipeId(MEDIA_ARTIFACTS));
   }
@@ -645,7 +645,11 @@ public final class ManagedContentExtractor implements ContentExtractor {
     try {
       decodeAudio(source, ffmpeg, wav);
       var transcript = transcribeAudio(whisper, model, wav).strip();
-      requireNonBlankBody(transcript, "Transcription produced no searchable text: " + source);
+      requireNonBlankBody(
+          transcript,
+          "Transcription produced no searchable text: "
+              + source
+              + ". Check the extraction logs for runtime diagnostics.");
       cache.write(MEDIA_CACHE_OPERATION, recipeId, sourceHash, transcript);
       return new Extraction(sourceHash, transcript);
     } finally {
@@ -688,9 +692,7 @@ public final class ManagedContentExtractor implements ContentExtractor {
             "--language",
             "auto",
             "--no-timestamps",
-            "--no-prints",
-            "--gpu",
-            "auto"),
+            "--no-prints"),
         wav.getParent());
   }
 
@@ -858,6 +860,10 @@ public final class ManagedContentExtractor implements ContentExtractor {
     var stdoutText = readProcessOutputText(stdout, "managed extraction stdout");
     var stderrText = readProcessOutputText(stderr, "managed extraction stderr");
     if (process.exitValue() == 0) {
+      // whisperfile rejects unknown arguments on stderr while still exiting 0.
+      if (stdoutText.isBlank() && !stderrText.isBlank()) {
+        LOG.warn("Managed extraction command produced no stdout: {}", truncate(stderrText.strip()));
+      }
       return stdoutText;
     }
     var failureDetail = firstNonBlank(stderrText, stdoutText);
