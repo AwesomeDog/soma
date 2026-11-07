@@ -1,12 +1,12 @@
 package io.github.awesomedog.soma.infra.sqlite;
 
 import static io.github.awesomedog.soma.app.ports.WorkspaceIndex.DOC_ID_LENGTH;
+import static io.github.awesomedog.soma.infra.sqlite.SqliteSemanticStore.serializeVectorAsBinary;
 import static io.github.awesomedog.soma.infra.sqlite.SqliteWorkspaceIndex.bindStringParameters;
 import static io.github.awesomedog.soma.infra.sqlite.SqliteWorkspaceIndex.databaseFailure;
 import static io.github.awesomedog.soma.infra.sqlite.SqliteWorkspaceIndex.parseFileType;
 import static io.github.awesomedog.soma.infra.sqlite.SqliteWorkspaceIndex.placeholders;
 import static io.github.awesomedog.soma.infra.sqlite.SqliteWorkspaceIndex.requireNonBlank;
-import static io.github.awesomedog.soma.infra.sqlite.SqliteWorkspaceIndex.serializeVectorAsJson;
 import static io.github.awesomedog.soma.infra.sqlite.SqliteWorkspaceIndex.uniqueNonBlankStrings;
 import static io.github.awesomedog.soma.infra.sqlite.SqliteWorkspaceIndex.validateEmbeddingVector;
 
@@ -321,7 +321,7 @@ final class SqliteIndexQueries {
     if (projectScope.isEmpty() || limit <= 0) {
       return List.of();
     }
-    var queryVectorJson = serializeVectorAsJson(queryVector);
+    var queryVectorBinary = serializeVectorAsBinary(queryVector);
     try (var connection = workspaceIndex.openVerifiedReadConnection(databaseFile)) {
       var vectorSearchHits = new ArrayList<SearchHit>();
       for (var projectName : projectScope) {
@@ -334,7 +334,7 @@ final class SqliteIndexQueries {
         while (true) {
           var bestHitByPath = new LinkedHashMap<String, SearchHit>();
           for (var hit :
-              searchProjectVectorHits(connection, projectName, queryVectorJson, chunkLimit)) {
+              searchProjectVectorHits(connection, projectName, queryVectorBinary, chunkLimit)) {
             bestHitByPath.putIfAbsent(hit.virtualPath(), hit);
           }
           if (bestHitByPath.size() >= limit || chunkLimit == maxChunkLimit) {
@@ -362,7 +362,7 @@ final class SqliteIndexQueries {
   }
 
   private List<SearchHit> searchProjectVectorHits(
-      Connection connection, String project, String vector, int limit) throws SQLException {
+      Connection connection, String project, byte[] vector, int limit) throws SQLException {
     var sql =
         """
         WITH vector_hits AS (
@@ -381,7 +381,7 @@ final class SqliteIndexQueries {
         ORDER BY vector_hits.distance, d.project_name, d.path, e.chunk_index
         """;
     try (var statement = connection.prepareStatement(sql)) {
-      statement.setString(1, vector);
+      statement.setBytes(1, vector);
       statement.setInt(2, limit);
       statement.setString(3, project);
       try (var rows = statement.executeQuery()) {
