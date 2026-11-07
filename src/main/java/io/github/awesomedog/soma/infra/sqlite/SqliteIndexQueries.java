@@ -1,12 +1,12 @@
 package io.github.awesomedog.soma.infra.sqlite;
 
 import static io.github.awesomedog.soma.app.ports.WorkspaceIndex.DOC_ID_LENGTH;
-import static io.github.awesomedog.soma.infra.sqlite.SqliteSemanticStore.serializeVectorAsBinary;
 import static io.github.awesomedog.soma.infra.sqlite.SqliteWorkspaceIndex.bindStringParameters;
 import static io.github.awesomedog.soma.infra.sqlite.SqliteWorkspaceIndex.databaseFailure;
 import static io.github.awesomedog.soma.infra.sqlite.SqliteWorkspaceIndex.parseFileType;
 import static io.github.awesomedog.soma.infra.sqlite.SqliteWorkspaceIndex.placeholders;
 import static io.github.awesomedog.soma.infra.sqlite.SqliteWorkspaceIndex.requireNonBlank;
+import static io.github.awesomedog.soma.infra.sqlite.SqliteWorkspaceIndex.serializeVectorAsBinary;
 import static io.github.awesomedog.soma.infra.sqlite.SqliteWorkspaceIndex.uniqueNonBlankStrings;
 import static io.github.awesomedog.soma.infra.sqlite.SqliteWorkspaceIndex.validateEmbeddingVector;
 

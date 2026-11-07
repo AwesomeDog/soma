@@ -21,6 +21,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -495,6 +496,52 @@ class SqliteWorkspaceIndexTest {
     assertThat(index.vectorSearch(database, List.of("docs"), vector(1.0f), 2))
         .extracting(hit -> hit.virtualPath())
         .containsExactly("soma://docs/long.md", "soma://docs/short.md");
+  }
+
+  @Test
+  void binaryVectorSerializationUsesLittleEndianFloat32() {
+    var vector = new float[768];
+    vector[0] = 1.0f;
+    vector[1] = -2.0f;
+    vector[2] = Float.MIN_VALUE;
+    vector[3] = -0.0f;
+    vector[4] = Float.MAX_VALUE;
+
+    var bytes = SqliteWorkspaceIndex.serializeVectorAsBinary(vector);
+
+    assertThat(bytes).hasSize(768 * Float.BYTES);
+    assertThat(HexFormat.of().formatHex(bytes, 0, 20))
+        .isEqualTo("0000803f000000c00100000000000080ffff7f7f");
+  }
+
+  @Test
+  void binaryVectorsRoundTripNonTrivialFloatValues() throws Exception {
+    index.openOrRebuildForScan(database, WRITE_LOCK);
+    var document = ready("docs", "precise.md", "Precise body");
+    index.applyScan(List.of(document), List.of(), 0, NO_PROGRESS);
+    index.writeChunks(document.contentHash(), List.of(chunk(document.body())));
+    var work = index.embeddingWork(List.of("docs")).getFirst();
+
+    var vector = new float[768];
+    vector[0] = 1.0e-8f;
+    vector[1] = -3.4e-5f;
+    vector[2] = Float.MIN_VALUE;
+    vector[3] = Float.MAX_VALUE;
+    vector[4] = -0.0f;
+    vector[5] = 0.123456789f;
+    index.writeEmbeddings(List.of(new EmbeddingWrite(work.documentId(), 0, 2, vector)));
+
+    try (var connection = connection();
+        var statement = connection.createStatement();
+        var rows = statement.executeQuery("SELECT embedding FROM vectors LIMIT 1")) {
+      assertThat(rows.next()).isTrue();
+      assertThat(rows.getBytes("embedding"))
+          .isEqualTo(SqliteWorkspaceIndex.serializeVectorAsBinary(vector));
+    }
+    var hits = index.vectorSearch(database, List.of("docs"), vector, 1);
+    assertThat(hits).hasSize(1);
+    assertThat(hits.getFirst().virtualPath()).isEqualTo("soma://docs/precise.md");
+    assertThat(hits.getFirst().score()).isEqualTo(1.0);
   }
 
   private void assertInitialSemanticState() throws Exception {

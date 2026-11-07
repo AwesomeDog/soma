@@ -5,6 +5,7 @@ import static io.github.awesomedog.soma.infra.sqlite.SqliteWorkspaceIndex.databa
 import static io.github.awesomedog.soma.infra.sqlite.SqliteWorkspaceIndex.invalidData;
 import static io.github.awesomedog.soma.infra.sqlite.SqliteWorkspaceIndex.placeholders;
 import static io.github.awesomedog.soma.infra.sqlite.SqliteWorkspaceIndex.requireNonBlank;
+import static io.github.awesomedog.soma.infra.sqlite.SqliteWorkspaceIndex.serializeVectorAsBinary;
 import static io.github.awesomedog.soma.infra.sqlite.SqliteWorkspaceIndex.uniqueNonBlankStrings;
 import static io.github.awesomedog.soma.infra.sqlite.SqliteWorkspaceIndex.validateEmbeddingVector;
 
@@ -222,15 +223,6 @@ final class SqliteSemanticStore {
       throw databaseFailure(
           "Could not write embeddings and vectors.", "Run `soma system embed`.", e);
     }
-  }
-
-  static byte[] serializeVectorAsBinary(float[] vector) {
-    var buffer = java.nio.ByteBuffer.allocate(vector.length * Float.BYTES)
-        .order(java.nio.ByteOrder.LITTLE_ENDIAN);
-    for (float value : vector) {
-      buffer.putFloat(value);
-    }
-    return buffer.array();
   }
 
   private static void executeUpdate(Connection connection, String sql) throws SQLException {

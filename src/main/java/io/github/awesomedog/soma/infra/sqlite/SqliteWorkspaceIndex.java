@@ -25,6 +25,8 @@ import jakarta.annotation.PreDestroy;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -637,15 +639,12 @@ public final class SqliteWorkspaceIndex implements WorkspaceIndex, AutoCloseable
     }
   }
 
-  static String serializeVectorAsJson(float[] vector) {
-    var out = new StringBuilder("[");
-    for (var valueIndex = 0; valueIndex < vector.length; valueIndex++) {
-      if (valueIndex > 0) {
-        out.append(',');
-      }
-      out.append(vector[valueIndex]);
+  static byte[] serializeVectorAsBinary(float[] vector) {
+    var buffer = ByteBuffer.allocate(vector.length * Float.BYTES).order(ByteOrder.LITTLE_ENDIAN);
+    for (var value : vector) {
+      buffer.putFloat(value);
     }
-    return out.append(']').toString();
+    return buffer.array();
   }
 
   static void requireNonBlank(String value, String label) {
